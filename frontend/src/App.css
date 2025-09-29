@@ -1,0 +1,81 @@
+/* styles for the main app container */
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* vh units are percent of viewport height, so 100vh is 100% of the viewport height, and 1vh is 1% of it */
+  min-width: 100vw;
+  background-color: #f0f0f0;
+}
+
+/* styles for the login box */
+.login-box {
+  background-color: white;
+  padding: 2rem; /* rem units are relative to the root font size, if the root font size is 16px, then the padding would be 32px (16 * 2)*/
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  gap: 1rem; /* space between elements */
+}
+
+.actions {
+  margin-top: auto;           /* push this row to the bottom */
+  display: flex;
+  justify-content: space-between;  /* align content to the right */
+  gap: 0.75rem;               /* spacing if you add more buttons later */
+}
+
+.button {
+  padding: 0.625rem 0.9rem;
+  border-radius: 6px;
+  border: 0;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* Primary (Sign In) */
+.button--primary {
+  background: rgba(191, 87, 0, 0.90);
+  color: white;
+}
+.button--primary:hover {
+  background: #BF5700;
+}
+
+/* Secondary (Sign Up) */
+.button--secondary {
+  background: rgba(51, 63, 72, 0.90);
+  color: white;
+}
+.button--secondary:hover {
+  background: #333F48;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* space between label and input */
+  margin-bottom: 1rem; /* space between fields */
+}
+
+label {
+  font-size: 0.9rem;
+  color: #333F48;
+}
+
+input[type="text"],
+input[type="password"] {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #BF5700;
+  box-shadow: 0 0 0 3px rgba(191, 87, 0, 0.15);
+}
