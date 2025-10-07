@@ -1,0 +1,25 @@
+.button {
+  padding: 0.625rem 0.9rem;
+  border-radius: 6px;
+  border: 0;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* Primary (Sign In) */
+.button--primary {
+  background: rgba(var(--color-primary, 191, 87, 0), 0.90);
+  color: white;
+}
+.button--primary:hover {
+  background: rgb(var(--color-primary, 51, 63, 72));
+}
+
+/* Secondary (Sign Up) */
+.button--secondary {
+  background: rgba(var(--color-secondary, 191, 87, 0), 0.90);
+  color: white;
+}
+.button--secondary:hover {
+  background: rgb(var(--color-secondary, 51, 63, 72));
+}
