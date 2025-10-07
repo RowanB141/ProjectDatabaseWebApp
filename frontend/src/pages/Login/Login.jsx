@@ -1,15 +1,16 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './App.css'
+import './Login.css'
 
-function App() {
+function Login() {
   { /* useState returns an array where index 0 is the current state value and index 1 is a setter function to update it.
       So in this case useState will set userId to '' initially, then you can change it using setUserId().*/}
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
 
+  // Assigns an anonymous function [() => {...}] to the handleSignIn variable
   const handleSignIn = () => {
     // Validate login, call backend, etc.
     navigate('/dashboard') // This sends you to the dashboard page
@@ -26,7 +27,6 @@ function App() {
         <h2>Login</h2>
         
         <div className="field">
-          { /* The htmlFor value should match the id it's corresponding input id */}
           <input
             id="userId"
             name="userId"                                        // used in form submission
@@ -66,4 +66,4 @@ function App() {
   )
 }
 
-export default App
+export default Login
