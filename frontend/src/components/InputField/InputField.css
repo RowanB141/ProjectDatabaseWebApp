@@ -1,0 +1,20 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* space between label and input */
+  margin-bottom: 1rem; /* space between fields */
+}
+
+input[type="text"],
+input[type="password"] {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: rgb(var(--color-primary, 191, 87, 0));
+  box-shadow: 0 0 0 3px rgba(var(--color-primary, 191, 87, 0), 0.15);
+}

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Login from './pages/Login/Login.jsx'
 import Dashboard from './pages/Dashboard/Dashboard.jsx'
+import './global.css'
 
 // Creates a router configuration with route definitions mapping URL paths to React components
 const router = createBrowserRouter([
