@@ -1,0 +1,36 @@
+{
+  "info": {
+    "name": "ProjectDatabaseWebApp API",
+    "_postman_id": "0000-0000-0000-0000",
+    "description": "Collection for backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"testuser\",\"password\":\"password\"}" },
+        "url": { "raw": "http://127.0.0.1:5000/api/auth/register", "protocol": "http", "host": ["127","0","0","1"], "port": "5000", "path": ["api","auth","register"] }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"testuser\",\"password\":\"password\"}" },
+        "url": { "raw": "http://127.0.0.1:5000/api/auth/login", "protocol": "http", "host": ["127","0","0","1"], "port": "5000", "path": ["api","auth","login"] }
+      }
+    },
+    {
+      "name": "List Hardware",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "http://127.0.0.1:5000/api/hardware/", "protocol": "http", "host": ["127","0","0","1"], "port": "5000", "path": ["api","hardware",""] }
+      }
+    }
+  ]
+}

@@ -12,14 +12,36 @@ function Login() {
   const navigate = useNavigate()
 
   // Assigns an anonymous function [() => {...}] to the handleSignIn variable
-  const handleSignIn = () => {
-    // Validate login, call backend, etc.
-    navigate('/dashboard') // This sends you to the dashboard page
+  const handleSignIn = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userId, password })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Login failed')
+      localStorage.setItem('token', data.token)
+      navigate('/dashboard')
+    } catch (err) {
+      alert(err.message || 'Login error')
+    }
   }
 
-  const handleSignUp = () => {
-    // Create account, call backend, etc.
-    navigate('/dashboard')
+  const handleSignUp = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: userId, password })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Register failed')
+      localStorage.setItem('token', data.token)
+      navigate('/dashboard')
+    } catch (err) {
+      alert(err.message || 'Register error')
+    }
   }
 
   return (
