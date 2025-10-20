@@ -1,34 +1,41 @@
 # ProjectDatabaseWebApp
 Project database web application for the ECE 461L team project.
 
-##
-Team Members: Rowan Becker, Daniel McIver, Oneza Vhora, Jaewon Kim, Marzooq Shah, Akshita Rawat
+## Team Members
+Rowan Becker, Daniel McIver, Oneza Vhora, Jaewon Kim, Marzooq Shah, Akshita Rawat
 
-##
-Frontend Quick Start:
-1. ```git clone https://github.com/RowanB141/ProjectDatabaseWebApp.git```
-2. Open cmd
-3. Navigate to frontend folder
-4. Run ```npm install```
-5. Run ```npm run dev```
+## Quick Start (PowerShell)
+```git clone https://github.com/RowanB141/ProjectDatabaseWebApp.git```
 
-Backend Quick Start (Flask + MongoDB):
-1. Open a new terminal and go to `backend/`
-2. Create and activate a Python virtualenv if you haven't already:
+### Front End
+1. Open a new terminal
+2. Navigate to frontend folder
+3. Run ```npm install```
+4. Run ```npm run dev```
+
+### Backend Quick Start (Flask + MongoDB):
+1. [Download MongoDB](https://www.mongodb.com/try/download/community)
+2. Install MongoDB
+    1. Complete installation
+    2. Default service configuration
+    3. Install MongoDB Compass
+3. Open Compass and add a new connection (defaults are fine, just give it a name, doesn't matter what)
+4. Open a new terminal and go to `backend/`
+5. Create and activate a Python virtualenv if you haven't already:
 ```powershell
 py -3 -m venv .venv
 . .\.venv\Scripts\Activate.ps1
 ```
-3. Install backend dependencies:
+6. Install backend dependencies:
 ```powershell
 pip install -r requirements.txt
 ```
-4. Create a `.env` file (or copy `.env.example`) and set `MONGO_URI` and `JWT_SECRET`.
-5. Seed hardware sets (optional):
+7. Create a `.env` file (or copy `.env.example`) and set `MONGO_URI` and `JWT_SECRET`.
+8. Seed hardware sets (first time only):
 ```powershell
 python seed_hardware.py
 ```
-6. Run the server:
+9. Run the server:
 ```powershell
 python run.py
 ```
@@ -37,26 +44,25 @@ Testing & Utilities:
 - A simple smoke script is available at `backend/smoke_test.py` (requires `requests`).
 - A Postman collection is included at `postman_collection.json`.
 
-Quick test (copy/paste PowerShell)
----------------------------------
-Run these from two terminals: one for the backend (activate Python venv) and one for the frontend (npm).
+## Quick test (copy/paste PowerShell)
+Open three terminals: one for the backend (activate Python venv), one for the frontend (npm), and one for testing.
 
 Backend terminal (activate venv and start server):
 ```powershell
-cd "C:\Users\oneza\Documents\fall 2025\ECE461L\ProjectDatabaseWebApp\backend"
+cd ".\backend"
 . .\.venv\Scripts\Activate.ps1
 python run.py
 ```
 
 Frontend terminal (start Vite):
 ```powershell
-cd "C:\Users\oneza\Documents\fall 2025\ECE461L\ProjectDatabaseWebApp\frontend"
+cd ".\frontend"
 npm install
 npm run dev
 # open the Vite URL printed by the command (usually http://localhost:5173)
 ```
 
-Quick API checks (use this in a separate PowerShell session). These use the test user `testuser` with password `password123`.
+Quick API checks (use this in the third terminal). These use the test user `testuser` with password `password123`.
 
 Register a test user:
 ```powershell
