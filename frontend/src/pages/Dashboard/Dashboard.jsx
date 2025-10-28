@@ -1,12 +1,17 @@
 import Button from '../../components/Button/Button';
+import ProjectItem from '../../components/ProjectItem/ProjectItem';
+import ProjectModal from '../../components/ProjectModal/ProjectModal';
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
+
 
 function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [hardwareSets, setHardwareSets] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,6 +36,7 @@ function Dashboard() {
     }).catch(err => console.warn(err));
   }, []);
 
+
   const updateHardware = async (id, action, amount = 1) => {
     const token = localStorage.getItem('token');
     if (!token) { alert('Please login'); return; }
@@ -50,14 +56,66 @@ function Dashboard() {
     }
   };
 
+  const handleToggleMembership = async (projectId) => {
+    const token = localStorage.getItem('token');
+    const project = projects.find(p => p.id === projectId);
+    const isJoining = !project.isMember;
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, isMember: isJoining } : p));
+    try {
+      const endpoint = isJoining ? 'join' : 'leave';
+      const res = await fetch(`http://localhost:5000/api/projects/${projectId}/${endpoint}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error(`Failed to ${endpoint}`);
+    } catch (err) {
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, isMember: !isJoining } : p));
+      alert(err.message);
+    }
+  };
+
+  const handleCreateProject = async (projectData) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('http://localhost:5000/api/projects/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(projectData)
+      });
+      if (!res.ok) throw new Error('Failed to create project');
+      const newProject = await res.json();
+      setProjects(prev => [...prev, newProject]);
+      setIsModalOpen(false);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to delete project');
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+  } catch (err) {
+    alert(err.message);
+  }
+  };
+
+
   const handleLogOut = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
 
+
   const createNewProject = () => {
-    // TODO: open modal or navigate to create project page
+    setIsModalOpen(true);
   };
+
 
   return (
     <div>
@@ -68,6 +126,7 @@ function Dashboard() {
         </div>
       </section>
 
+
       <div className="dashboard">
         <section className="projects-section">
           <div className="section-header">
@@ -76,15 +135,42 @@ function Dashboard() {
           </div>
 
           <div className="projects-list">
-            {projects.length === 0 ? (
+            {projects.filter(p => p.isMember).length === 0 ? (
               <div className="empty-state">No projects yet.</div>
             ) : (
-              projects.map((project) => (
-                <div key={project.id} className="project-item">{project.name}</div>
+              projects.filter(p => p.isMember).map((project) => (
+                <ProjectItem 
+                  key={project.id} 
+                  project={project}
+                  onJoinLeave={handleToggleMembership}
+                  onDelete={handleDeleteProject}
+                />
               ))
             )}
           </div>
         </section>
+
+
+        <section className="projects-section">
+          <div className="section-header">
+            <h2>Available Projects</h2>
+          </div>
+
+          <div className="projects-list">
+            {projects.filter(p => !p.isMember).length === 0 ? (
+              <div className="empty-state">No projects yet.</div>
+            ) : (
+              projects.filter(p => !p.isMember).map((project) => (
+                <ProjectItem 
+                  key={project.id} 
+                  project={project}
+                  onJoinLeave={handleToggleMembership}
+                />
+              ))
+            )}
+          </div>
+        </section>
+
 
         <section className="resources-section">
           <h2>Resources & Hardware Sets</h2>
@@ -104,8 +190,16 @@ function Dashboard() {
           </div>
         </section>
       </div>
+
+
+      <ProjectModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 }
+
 
 export default Dashboard;

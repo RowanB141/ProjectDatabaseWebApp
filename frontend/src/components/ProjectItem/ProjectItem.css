@@ -1,0 +1,19 @@
+.project-item {
+  background-color: rgba(var(--color-background), 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--color-secondary), 0.1);
+}
+
+.project-name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.project-actions {
+  display: flex;
+  gap: 8px;
+}

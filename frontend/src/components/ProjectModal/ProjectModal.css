@@ -1,0 +1,34 @@
+dialog {
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  min-width: 400px;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+dialog form > div {
+  margin-bottom: 12px;
+}
+
+dialog label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+dialog input,
+dialog textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+dialog textarea {
+  min-height: 80px;
+  resize: vertical;
+}
