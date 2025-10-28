@@ -64,6 +64,19 @@ npm run dev
 
 Quick API checks (use this in the third terminal). These use the test user `testuser` with password `password123`.
 
+Test with smoke_test.py
+``` powershell
+$env:SMOKE_USER='testuser'
+$env:SMOKE_PASS='password123'
+python smoke_test.py
+#smoke_test.py tests the following (success criteria):
+#Server reachable at BASE_URL.
+#Authentication endpoint returns a token (when using username/password).
+#Authorization header accepted by protected endpoint (not 401/403).
+#/api/hardware/ returns HTTP 200.
+#The response body is valid JSON and can be parsed by requests.
+```
+
 Register a test user:
 ```powershell
 $response = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:5000/api/auth/register' `
