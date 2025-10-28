@@ -18,9 +18,9 @@ Rowan Becker, Daniel McIver, Oneza Vhora, Jaewon Kim, Marzooq Shah, Akshita Rawa
 2. Install MongoDB
     1. Complete installation
     2. Default service configuration
-    3. Install MongoDB Compass
+    3. Install MongoDB Compass (optional, helps to visualize the database)
 3. Open Compass and add a new connection (defaults are fine, just give it a name, doesn't matter what)
-4. Open a new terminal and go to `backend/`
+4. (Back in VS Code) Open a new terminal and go to `backend/`
 5. Create and activate a Python virtualenv if you haven't already:
 ```powershell
 py -3 -m venv .venv
