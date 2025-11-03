@@ -10,6 +10,12 @@ function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [hardwareSets, setHardwareSets] = useState([]);
+  // local demo hardware state used when backend returns no hardware
+  const demoDefaults = [
+    { id: 'demo-hw-1', name: 'Hardware Set 1', capacity: 100, available: 100 },
+    { id: 'demo-hw-2', name: 'Hardware Set 2', capacity: 100, available: 100 }
+  ];
+  const [demoHardware, setDemoHardware] = useState(demoDefaults);
   // map of hardware id -> { checkout: string, checkin: string } for quick inputs
   const [hwAmounts, setHwAmounts] = useState({});
   // map of hardware id -> { checkout: string|null, checkin: string|null } for validation errors
@@ -60,6 +66,22 @@ function Dashboard() {
     } catch (err) {
       alert(err.message || 'Error updating hardware');
     }
+  };
+
+  // Local demo-mode updater: mutates `demoHardware` to simulate availability changes
+  const performDemoUpdate = (id, action, amount = 1) => {
+    setDemoHardware(prev => prev.map(h => {
+      if (h.id !== id) return h;
+      let available = h.available;
+      if (action === 'checkout') {
+        available = Math.max(0, available - amount);
+      } else if (action === 'checkin') {
+        available = Math.min(h.capacity, available + amount);
+      }
+      return { ...h, available };
+    }));
+    // clear the amounts for that id after simulated update
+    setHwAmounts(prev => ({ ...prev, [id]: { checkout: '', checkin: '' } }));
   };
 
   const handleToggleMembership = async (projectId) => {
@@ -183,12 +205,8 @@ function Dashboard() {
           {/* Quick controls for first two hardware sets (if present) */}
           <div className="hardware-quick-row" style={{ display: 'flex', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
             {(() => {
-              const defaults = [
-                { id: 'demo-hw-1', name: 'Hardware Set 1', capacity: 100, available: 100 },
-                { id: 'demo-hw-2', name: 'Hardware Set 2', capacity: 100, available: 100 }
-              ];
               const isDemo = hardwareSets.length === 0;
-              const displayedHardware = isDemo ? defaults : hardwareSets;
+              const displayedHardware = isDemo ? demoHardware : hardwareSets;
 
               return (
                 <>
@@ -223,7 +241,6 @@ function Dashboard() {
                           ) : null}
                         </div>
                         <Button onClick={() => {
-                          if (isDemo) { alert('Demo mode: backend not connected'); return; }
                           const val = (hwAmounts[h.id] && hwAmounts[h.id].checkout) || '';
                           if (!/^\d+$/.test(val)) {
                             setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Invalid input' } }));
@@ -232,6 +249,10 @@ function Dashboard() {
                           const num = Number(val);
                           if (num <= 0) {
                             setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Must be greater than 0' } }));
+                            return;
+                          }
+                          if (isDemo) {
+                            performDemoUpdate(h.id, 'checkout', num);
                             return;
                           }
                           updateHardware(h.id, 'checkout', num);
@@ -263,7 +284,6 @@ function Dashboard() {
                           ) : null}
                         </div>
                         <Button onClick={() => {
-                          if (isDemo) { alert('Demo mode: backend not connected'); return; }
                           const val = (hwAmounts[h.id] && hwAmounts[h.id].checkin) || '';
                           if (!/^\d+$/.test(val)) {
                             setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Invalid input' } }));
@@ -272,6 +292,10 @@ function Dashboard() {
                           const num = Number(val);
                           if (num <= 0) {
                             setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Must be greater than 0' } }));
+                            return;
+                          }
+                          if (isDemo) {
+                            performDemoUpdate(h.id, 'checkin', num);
                             return;
                           }
                           updateHardware(h.id, 'checkin', num);
@@ -289,10 +313,7 @@ function Dashboard() {
           <div className="hardware-sets">
             {(() => {
               const isDemo = hardwareSets.length === 0;
-              const displayedHardware = isDemo ? [
-                { id: 'demo-hw-1', name: 'Hardware Set 1', capacity: 100, available: 100 },
-                { id: 'demo-hw-2', name: 'Hardware Set 2', capacity: 100, available: 100 }
-              ] : hardwareSets;
+              const displayedHardware = isDemo ? demoHardware : hardwareSets;
 
               return (
                 <>
@@ -302,8 +323,8 @@ function Dashboard() {
                       <p>Capacity: {h.capacity}</p>
                       <p>Available: {h.available}</p>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkout', 1)}>Checkout 1</Button>
-                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkin', 1)}>Checkin 1</Button>
+                        <Button onClick={() => isDemo ? performDemoUpdate(h.id, 'checkout', 1) : updateHardware(h.id, 'checkout', 1)}>Checkout 1</Button>
+                        <Button onClick={() => isDemo ? performDemoUpdate(h.id, 'checkin', 1) : updateHardware(h.id, 'checkin', 1)}>Checkin 1</Button>
                       </div>
                     </div>
                   ))}
