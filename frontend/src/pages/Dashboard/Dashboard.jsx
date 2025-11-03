@@ -103,6 +103,22 @@ function Dashboard() {
   };
 
   const handleCreateProject = async (projectData) => {
+    // quick client-side duplicate check before sending to server
+  const nameToCheck = String(projectData.name || '').toLowerCase().trim();
+  const idToCheck = String(projectData.id || '').toLowerCase().trim();
+    const dupByName = projects.some(p => String(p.name || '').toLowerCase().trim() === nameToCheck);
+    const dupById = projects.some(p => String(p.id || '').toLowerCase().trim() === idToCheck);
+    // Enforce unique Project ID first
+    if (dupById) {
+      alert('A project with this Project ID already exists. Please choose a different Project ID.');
+      return;
+    }
+    // Optionally warn about duplicate names
+    if (dupByName) {
+      alert('A project with this name already exists. Consider using a different name.');
+      return;
+    }
+
     const token = localStorage.getItem('token');
     try {
       const res = await fetch('http://localhost:5000/api/projects/', {
@@ -251,6 +267,11 @@ function Dashboard() {
                             setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Must be greater than 0' } }));
                             return;
                           }
+                          // Prevent checking out more than available
+                          if (num > h.available) {
+                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Cannot checkout more than available' } }));
+                            return;
+                          }
                           if (isDemo) {
                             performDemoUpdate(h.id, 'checkout', num);
                             return;
@@ -294,6 +315,11 @@ function Dashboard() {
                             setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Must be greater than 0' } }));
                             return;
                           }
+                          // Prevent checkin that would exceed capacity (optional guard)
+                          if (h.available + num > h.capacity) {
+                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Cannot checkin more than capacity' } }));
+                            return;
+                          }
                           if (isDemo) {
                             performDemoUpdate(h.id, 'checkin', num);
                             return;
@@ -323,8 +349,30 @@ function Dashboard() {
                       <p>Capacity: {h.capacity}</p>
                       <p>Available: {h.available}</p>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button onClick={() => isDemo ? performDemoUpdate(h.id, 'checkout', 1) : updateHardware(h.id, 'checkout', 1)}>Checkout 1</Button>
-                        <Button onClick={() => isDemo ? performDemoUpdate(h.id, 'checkin', 1) : updateHardware(h.id, 'checkin', 1)}>Checkin 1</Button>
+                        <Button onClick={() => {
+                          // prevent checkout when nothing available
+                          if (h.available < 1) {
+                            alert('Not enough available to checkout');
+                            return;
+                          }
+                          if (isDemo) {
+                            performDemoUpdate(h.id, 'checkout', 1);
+                          } else {
+                            updateHardware(h.id, 'checkout', 1);
+                          }
+                        }}>Checkout 1</Button>
+                        <Button onClick={() => {
+                          // prevent checkin that would exceed capacity
+                          if (h.available >= h.capacity) {
+                            alert('Already at full capacity');
+                            return;
+                          }
+                          if (isDemo) {
+                            performDemoUpdate(h.id, 'checkin', 1);
+                          } else {
+                            updateHardware(h.id, 'checkin', 1);
+                          }
+                        }}>Checkin 1</Button>
                       </div>
                     </div>
                   ))}
