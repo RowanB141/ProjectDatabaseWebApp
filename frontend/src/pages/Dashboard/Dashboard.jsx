@@ -10,8 +10,10 @@ function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [hardwareSets, setHardwareSets] = useState([]);
-  // map of hardware id -> amount string for quick checkout/checkin inputs
+  // map of hardware id -> { checkout: string, checkin: string } for quick inputs
   const [hwAmounts, setHwAmounts] = useState({});
+  // map of hardware id -> { checkout: string|null, checkin: string|null } for validation errors
+  const [hwErrors, setHwErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 
@@ -53,8 +55,8 @@ function Dashboard() {
         console.log('update response', updated, res.status);
       if (!res.ok) throw new Error(updated.message || 'Update failed');
       setHardwareSets(prev => prev.map(h => (h.id === updated.id ? updated : h)));
-      // clear the amount for that id after successful update
-      setHwAmounts(prev => ({ ...prev, [id]: '' }));
+  // clear the amounts for that id after successful update
+  setHwAmounts(prev => ({ ...prev, [id]: { checkout: '', checkin: '' } }));
     } catch (err) {
       alert(err.message || 'Error updating hardware');
     }
@@ -196,19 +198,84 @@ function Dashboard() {
                       <p>Capacity: {h.capacity}</p>
                       <p>Available: {h.available}</p>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
-                        <input
-                          type="number"
-                          min="1"
-                          placeholder="amount"
-                          value={hwAmounts[h.id] || ''}
-                          onChange={(e) => setHwAmounts(prev => ({ ...prev, [h.id]: e.target.value }))}
-                          style={{ width: '80px', padding: '6px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.12)' }}
-                          disabled={isDemo}
-                        />
-                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkout', Number(hwAmounts[h.id] || 1))}>
+                        {/* checkout input */}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="checkout"
+                            value={(hwAmounts[h.id] && hwAmounts[h.id].checkout) || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setHwAmounts(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: val } }));
+                              // validate: allow only digits
+                              if (val === '' || /^\d+$/.test(val)) {
+                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: '' } }));
+                              } else {
+                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Invalid input' } }));
+                              }
+                            }}
+                              style={{ width: '100px', padding: '6px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.12)' }}
+                          />
+                          {hwErrors[h.id] && hwErrors[h.id].checkout ? (
+                            <div style={{ color: '#d9534f', fontSize: '12px', marginTop: '4px' }}>{hwErrors[h.id].checkout}</div>
+                          ) : null}
+                        </div>
+                        <Button onClick={() => {
+                          if (isDemo) { alert('Demo mode: backend not connected'); return; }
+                          const val = (hwAmounts[h.id] && hwAmounts[h.id].checkout) || '';
+                          if (!/^\d+$/.test(val)) {
+                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Invalid input' } }));
+                            return;
+                          }
+                          const num = Number(val);
+                          if (num <= 0) {
+                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Must be greater than 0' } }));
+                            return;
+                          }
+                          updateHardware(h.id, 'checkout', num);
+                        }}>
                           Checkout
                         </Button>
-                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkin', Number(hwAmounts[h.id] || 1))}>
+
+                        {/* checkin input */}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="checkin"
+                            value={(hwAmounts[h.id] && hwAmounts[h.id].checkin) || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setHwAmounts(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: val } }));
+                              if (val === '' || /^\d+$/.test(val)) {
+                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: '' } }));
+                              } else {
+                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Invalid input' } }));
+                              }
+                            }}
+                            style={{ width: '100px', padding: '6px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.12)' }}
+                          />
+                          {hwErrors[h.id] && hwErrors[h.id].checkin ? (
+                            <div style={{ color: '#d9534f', fontSize: '12px', marginTop: '4px' }}>{hwErrors[h.id].checkin}</div>
+                          ) : null}
+                        </div>
+                        <Button onClick={() => {
+                          if (isDemo) { alert('Demo mode: backend not connected'); return; }
+                          const val = (hwAmounts[h.id] && hwAmounts[h.id].checkin) || '';
+                          if (!/^\d+$/.test(val)) {
+                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Invalid input' } }));
+                            return;
+                          }
+                          const num = Number(val);
+                          if (num <= 0) {
+                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Must be greater than 0' } }));
+                            return;
+                          }
+                          updateHardware(h.id, 'checkin', num);
+                        }}>
                           Checkin
                         </Button>
                       </div>
@@ -229,7 +296,7 @@ function Dashboard() {
 
               return (
                 <>
-                  {displayedHardware.map(h => (
+                  {displayedHardware.slice(2).map(h => (
                     <div key={h.id} className="hardware-card">
                       <h3>{h.name}</h3>
                       <p>Capacity: {h.capacity}</p>

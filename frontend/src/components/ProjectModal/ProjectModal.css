@@ -55,16 +55,29 @@ dialog .button:focus {
   outline: 2px solid rgba(var(--color-on-surface), 0.12);
 }
 
-/* Make modal buttons (Create and Cancel) use a light grey outline and text */
-dialog .button {
+/* Light-mode modal buttons: stronger contrast for cancel/default buttons */
+:root dialog .button {
+  background: rgba(var(--color-on-surface), 0.06);
+  color: rgb(var(--color-on-surface));
+  border: 1px solid rgba(var(--color-on-surface), 0.16);
+}
+
+/* Dark-mode modal buttons: keep previously used light-grey look */
+.dark dialog .button {
   background: transparent;
   color: #dcdcdc; /* light grey text */
   border: 1px solid #dcdcdc; /* light grey outline */
 }
 
-/* Still allow the primary button to have a subtle colored background, but keep its
-   text/outline light grey for consistency in the modal */
-dialog .button.button--primary {
+/* Primary button styling: colored background with good contrast in light mode */
+:root dialog .button.button--primary {
+  background: rgb(var(--color-primary));
+  color: rgb(var(--color-on-surface));
+  border: 1px solid rgba(var(--color-primary), 0.95);
+}
+
+/* Primary in dark mode: keep subtle colored primary while preserving light text */
+.dark dialog .button.button--primary {
   background: rgba(var(--color-primary), 0.95);
   color: #dcdcdc;
   border: 1px solid #dcdcdc;
