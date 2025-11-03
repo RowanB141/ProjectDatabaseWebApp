@@ -6,13 +6,44 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  /* Color palette uses comma-separated RGB values so we can reuse with rgb() */
   --color-primary: 191, 87, 0;
   --color-secondary: 51, 63, 72;
   --color-background: 240, 240, 240;
+  --color-on-background: 20, 20, 20; /* text color on background */
+  --color-surface: 255, 255, 255; /* cards, panels */
+  --color-on-surface: 20, 20, 20;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   background-color: rgb(var(--color-background));
+  color: rgb(var(--color-on-background));
+  font-family: var(--font-family, system-ui, Avenir, Helvetica, Arial, sans-serif);
+}
+
+/* Dark theme variables when .dark is applied to <html> or <body> */
+.dark {
+  --color-background: 10, 10, 10;
+  --color-on-background: 235, 235, 235;
+  --color-surface: 20, 20, 20;
+  --color-on-surface: 235, 235, 235;
+  --color-secondary: 200, 200, 200;
+}
+
+/* Utility classes that use variables */
+.card {
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
+  border-radius: 6px;
+  padding: 12px;
+}
+
+/* Theme toggle position */
+.theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
 }
