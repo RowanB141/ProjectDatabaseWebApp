@@ -1,18 +1,23 @@
 .theme-toggle {
-  position: fixed;
-  top: 14px;
-  right: 14px;
+  /* Slightly smaller toggle placed a bit higher so it sits above the
+     thin header line over the Homework Management area. Keeps absolute
+     positioning so it scrolls with the page. */
+  position: absolute;
+  top: 2px; /* nudged slightly higher */
+  right: 18px;
   z-index: 9999;
   display: flex;
   align-items: center;
+  padding: 2px;
+  border-radius: 8px;
 }
 
 /* Switch (slider) */
 .switch {
   position: relative;
   display: inline-block;
-  width: 62px;
-  height: 34px;
+  width: 40px; /* a bit smaller */
+  height: 24px;
 }
 
 .switch input { 
@@ -31,17 +36,17 @@
   background-color: rgba(0,0,0,0.12);
   -webkit-transition: .2s;
   transition: .2s;
-  border-radius: 34px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  border-radius: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
   background-color: #fff;
   -webkit-transition: .2s;
   transition: .2s;
@@ -59,7 +64,7 @@
 }
 
 .switch input:checked + .slider:before {
-  transform: translateX(28px);
+  transform: translateX(16px);
 }
 
 /* Dark mode label overlay to make switch clearly visible */
@@ -67,8 +72,8 @@
 .dark .theme-toggle { background: rgba(0,0,0,0.5); }
 
 .mode-label {
-  margin-left: 10px;
-  font-size: 14px;
+  margin-left: 8px;
+  font-size: 13px;
   color: rgba(0,0,0,0.8);
   font-weight: 600;
 }

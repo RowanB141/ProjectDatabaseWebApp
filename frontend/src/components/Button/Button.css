@@ -23,3 +23,26 @@
 .button--secondary:hover {
   filter: brightness(0.95);
 }
+
+/* Improve visibility for secondary buttons in dark mode */
+.dark .button--secondary {
+  /* slightly translucent light-on-dark style with clear contrast */
+  background: rgba(255,255,255,0.12);
+  color: rgb(var(--color-on-surface));
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.dark .button--secondary:hover {
+  background: rgba(255,255,255,0.18);
+  filter: none;
+}
+
+/* Danger-style for destructive actions (Delete) — use same visibility improvements */
+.button--danger {
+  background: rgba(220, 38, 38, 0.95); /* red */
+  color: #fff;
+}
+.button--danger:hover { filter: brightness(0.95); }
+.dark .button--danger {
+  background: rgba(220, 38, 38, 0.9);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.3) inset;
+}

@@ -10,7 +10,7 @@ function ProjectItem({ project, onJoinLeave, onDelete }) {
           {project.isMember ? 'Leave' : 'Join'}
         </Button>
         {project.isMember && (
-          <Button variant="secondary" onClick={() => onDelete(project.id)}>
+          <Button variant="danger" onClick={() => onDelete(project.id)}>
             Delete
           </Button>
         )}
