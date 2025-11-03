@@ -1,8 +1,10 @@
 dialog {
   padding: 20px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(var(--color-secondary), 0.15);
   min-width: 400px;
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
 }
 
 dialog::backdrop {
@@ -16,19 +18,54 @@ dialog form > div {
 dialog label {
   display: block;
   margin-bottom: 4px;
-  font-weight: bold;
+  font-weight: 700;
+  color: rgba(var(--color-on-surface), 0.9);
 }
 
 dialog input,
 dialog textarea {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(var(--color-secondary), 0.12);
   border-radius: 4px;
   box-sizing: border-box;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-on-surface));
 }
 
 dialog textarea {
   min-height: 80px;
   resize: vertical;
+}
+
+/* Style dialog buttons for good contrast in both themes
+   - background uses the on-surface color (translucent)
+   - text uses the page background color so it contrasts the translucent surface
+*/
+dialog .button {
+  background: rgba(var(--color-on-surface), 0.06);
+  color: rgb(var(--color-background));
+  border: 1px solid rgba(var(--color-on-surface), 0.12);
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+dialog .button:focus {
+  outline: 2px solid rgba(var(--color-on-surface), 0.12);
+}
+
+/* Make modal buttons (Create and Cancel) use a light grey outline and text */
+dialog .button {
+  background: transparent;
+  color: #dcdcdc; /* light grey text */
+  border: 1px solid #dcdcdc; /* light grey outline */
+}
+
+/* Still allow the primary button to have a subtle colored background, but keep its
+   text/outline light grey for consistency in the modal */
+dialog .button.button--primary {
+  background: rgba(var(--color-primary), 0.95);
+  color: #dcdcdc;
+  border: 1px solid #dcdcdc;
 }
