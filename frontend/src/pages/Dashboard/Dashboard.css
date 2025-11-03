@@ -7,7 +7,8 @@
 .projects-section,
 .resources-section,
 .banner-section {
-  background-color: white;
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
   padding: 2rem;
   border-radius: 8px;
   border: 1px solid rgba(var(--color-secondary), 0.15);
@@ -67,7 +68,7 @@
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #999;
+  color: rgba(var(--color-secondary), 0.6);
   font-size: 1rem;
   text-align: center;
 }
@@ -82,7 +83,8 @@
   flex: 1;
   min-width: 200px;
   padding: 1.5rem;
-  background-color: rgba(var(--color-background), 0.2);
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
   border: 1px solid rgba(var(--color-secondary), 0.15);
   border-radius: 8px;
 }
@@ -94,7 +96,7 @@
 
 .hardware-card p {
   margin: 0.5rem 0;
-  color: #666;
+  color: rgba(var(--color-on-surface), 0.9);
 }
 
 

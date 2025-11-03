@@ -1,5 +1,6 @@
 .project-item {
-  background-color: rgba(var(--color-background), 0.25);
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
   display: flex;
   justify-content: space-between;
   align-items: center;

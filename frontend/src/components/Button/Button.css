@@ -8,18 +8,18 @@
 
 /* Primary (Sign In) */
 .button--primary {
-  background: rgba(var(--color-primary, 191, 87, 0), 0.90);
-  color: white;
+  background: rgb(var(--color-primary));
+  color: rgb(var(--color-on-surface));
 }
 .button--primary:hover {
-  background: rgb(var(--color-primary, 51, 63, 72));
+  filter: brightness(0.95);
 }
 
 /* Secondary (Sign Up) */
 .button--secondary {
-  background: rgba(var(--color-secondary, 191, 87, 0), 0.90);
-  color: white;
+  background: rgba(var(--color-secondary), 0.95);
+  color: rgb(var(--color-on-surface));
 }
 .button--secondary:hover {
-  background: rgb(var(--color-secondary, 51, 63, 72));
+  filter: brightness(0.95);
 }

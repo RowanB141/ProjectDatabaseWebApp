@@ -6,14 +6,16 @@
   min-height: 100vh; /* vh units are percent of viewport height, so 100vh is 100% of the viewport height, and 1vh is 1% of it */
   min-width: 100vw;
   background-color: rgb(var(--color-background));
+  color: rgb(var(--color-on-background));
 }
 
 /* styles for the login box */
 .login-box {
-  background-color: white;
+  background-color: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
   padding: 2rem; /* rem units are relative to the root font size, if the root font size is 16px, then the padding would be 32px (16 * 2)*/
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
   width: 300px;
   display: flex;
   flex-direction: column;
@@ -30,5 +32,5 @@
 
 label {
   font-size: 0.9rem;
-  color: #333F48;
+  color: rgb(var(--color-on-surface));
 }
