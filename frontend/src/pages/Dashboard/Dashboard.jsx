@@ -10,6 +10,8 @@ function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [hardwareSets, setHardwareSets] = useState([]);
+  // map of hardware id -> amount string for quick checkout/checkin inputs
+  const [hwAmounts, setHwAmounts] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 
@@ -51,6 +53,8 @@ function Dashboard() {
         console.log('update response', updated, res.status);
       if (!res.ok) throw new Error(updated.message || 'Update failed');
       setHardwareSets(prev => prev.map(h => (h.id === updated.id ? updated : h)));
+      // clear the amount for that id after successful update
+      setHwAmounts(prev => ({ ...prev, [id]: '' }));
     } catch (err) {
       alert(err.message || 'Error updating hardware');
     }
@@ -174,19 +178,71 @@ function Dashboard() {
 
         <section className="resources-section">
           <h2>Resources & Hardware Sets</h2>
+          {/* Quick controls for first two hardware sets (if present) */}
+          <div className="hardware-quick-row" style={{ display: 'flex', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            {(() => {
+              const defaults = [
+                { id: 'demo-hw-1', name: 'Hardware Set 1', capacity: 100, available: 100 },
+                { id: 'demo-hw-2', name: 'Hardware Set 2', capacity: 100, available: 100 }
+              ];
+              const isDemo = hardwareSets.length === 0;
+              const displayedHardware = isDemo ? defaults : hardwareSets;
+
+              return (
+                <>
+                  {displayedHardware.slice(0,2).map(h => (
+                    <div key={h.id} className="hardware-card" style={{ minWidth: '260px' }}>
+                      <h3>{h.name}</h3>
+                      <p>Capacity: {h.capacity}</p>
+                      <p>Available: {h.available}</p>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="amount"
+                          value={hwAmounts[h.id] || ''}
+                          onChange={(e) => setHwAmounts(prev => ({ ...prev, [h.id]: e.target.value }))}
+                          style={{ width: '80px', padding: '6px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.12)' }}
+                          disabled={isDemo}
+                        />
+                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkout', Number(hwAmounts[h.id] || 1))}>
+                          Checkout
+                        </Button>
+                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkin', Number(hwAmounts[h.id] || 1))}>
+                          Checkin
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
+          </div>
 
           <div className="hardware-sets">
-            {hardwareSets.map(h => (
-              <div key={h.id} className="hardware-card">
-                <h3>{h.name}</h3>
-                <p>Capacity: {h.capacity}</p>
-                <p>Available: {h.available}</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button onClick={() => updateHardware(h.id, 'checkout', 1)}>Checkout 1</Button>
-                  <Button onClick={() => updateHardware(h.id, 'checkin', 1)}>Checkin 1</Button>
-                </div>
-              </div>
-            ))}
+            {(() => {
+              const isDemo = hardwareSets.length === 0;
+              const displayedHardware = isDemo ? [
+                { id: 'demo-hw-1', name: 'Hardware Set 1', capacity: 100, available: 100 },
+                { id: 'demo-hw-2', name: 'Hardware Set 2', capacity: 100, available: 100 }
+              ] : hardwareSets;
+
+              return (
+                <>
+                  {displayedHardware.map(h => (
+                    <div key={h.id} className="hardware-card">
+                      <h3>{h.name}</h3>
+                      <p>Capacity: {h.capacity}</p>
+                      <p>Available: {h.available}</p>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkout', 1)}>Checkout 1</Button>
+                        <Button onClick={() => isDemo ? alert('Demo mode: backend not connected') : updateHardware(h.id, 'checkin', 1)}>Checkin 1</Button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         </section>
       </div>
