@@ -17,11 +17,14 @@
 
 /* Secondary (Sign Up) */
 .button--secondary {
-  background: rgba(var(--color-secondary), 0.95);
-  color: rgb(var(--color-on-surface));
+  /* Dark, high-contrast button on light backgrounds */
+  background: rgba(var(--color-secondary), 0.95); /* dark gray */
+  color: #ffffff; /* ensure readable on dark background in light mode */
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
 }
 .button--secondary:hover {
-  filter: brightness(0.95);
+  filter: brightness(0.92);
 }
 
 /* Improve visibility for secondary buttons in dark mode */
