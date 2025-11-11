@@ -7,7 +7,7 @@ from flask_cors import CORS
 load_dotenv()
 
 def create_app():
-	app = Flask(__name__)
+	app = Flask(__name__, static_folder="../frontend/dist", static_url_path="/")
 	app.config["MONGO_URI"] = os.getenv("MONGO_URI", "mongodb://localhost:27017/projectdb")
 	app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "dev-secret")
 
@@ -29,3 +29,7 @@ def create_app():
 
 	return app
 
+
+@app.route("/")
+def index():
+    return send_from_directory(app.static_folder, "index.html")
