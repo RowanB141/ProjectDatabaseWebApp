@@ -55,7 +55,8 @@ function Dashboard() {
       const res = await fetch(`http://localhost:5000/api/hardware/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action, amount })
+        body: JSON.stringify({ action, amount }) // TODO: Pass project id as well, so that the backend can update global_usage
+        // TODO: Either (or maybe both?) get hardware or get projects needs to return the hardware it has checked-out from global_usage
       });
       const updated = await res.json();
         console.log('update response', updated, res.status);
