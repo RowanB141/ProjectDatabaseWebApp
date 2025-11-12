@@ -31,6 +31,23 @@
         "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "http://127.0.0.1:5000/api/hardware/", "protocol": "http", "host": ["127","0","0","1"], "port": "5000", "path": ["api","hardware",""] }
       }
+    },
+    {
+  "name": "Initialize Hardware Sets",
+  "request": {
+    "method": "POST",
+    "header": [
+      { "key": "Authorization", "value": "Bearer {{token}}" }
+    ],
+    "url": {
+      "raw": "http://127.0.0.1:5000/api/hardware/init",
+      "protocol": "http",
+      "host": ["127","0","0","1"],
+      "port": "5000",
+      "path": ["api","hardware","init"]
     }
+  }
+}
+
   ]
 }

@@ -16,7 +16,6 @@ __pycache__/
 
 # Distribution / build
 build/
-dist/
 *.egg-info/
 
 # IDE/editor files
