@@ -4,6 +4,9 @@ venv/
 ENV/
 env/
 
+Lib/
+Scripts/
+
 # Python cache / bytecode
 __pycache__/
 *.py[cod]
@@ -16,7 +19,6 @@ __pycache__/
 
 # Distribution / build
 build/
-dist/
 *.egg-info/
 
 # IDE/editor files

@@ -55,28 +55,28 @@ dialog .button:focus {
   outline: 2px solid rgba(var(--color-on-surface), 0.12);
 }
 
-/* Light-mode modal buttons: stronger contrast for cancel/default buttons */
+/* Light-mode modal buttons */
 :root dialog .button {
   background: rgba(var(--color-on-surface), 0.06);
   color: rgb(var(--color-on-surface));
   border: 1px solid rgba(var(--color-on-surface), 0.16);
 }
 
-/* Dark-mode modal buttons: keep previously used light-grey look */
+/* Dark-mode modal buttons */
 .dark dialog .button {
   background: transparent;
   color: #dcdcdc; /* light grey text */
   border: 1px solid #dcdcdc; /* light grey outline */
 }
 
-/* Primary button styling: colored background with good contrast in light mode */
+/* Primary button styling */
 :root dialog .button.button--primary {
   background: rgb(var(--color-primary));
   color: rgb(var(--color-on-surface));
   border: 1px solid rgba(var(--color-primary), 0.95);
 }
 
-/* Primary in dark mode: keep subtle colored primary while preserving light text */
+/* Primary in dark mode */
 .dark dialog .button.button--primary {
   background: rgba(var(--color-primary), 0.95);
   color: #dcdcdc;

@@ -14,7 +14,7 @@ function Login() {
   // Assigns an anonymous function [() => {...}] to the handleSignIn variable
   const handleSignIn = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: userId, password })
@@ -22,6 +22,7 @@ function Login() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Login failed')
       localStorage.setItem('token', data.token)
+      localStorage.setItem('userId', data.id)
       navigate('/dashboard')
     } catch (err) {
       alert(err.message || 'Login error')
@@ -30,7 +31,7 @@ function Login() {
 
   const handleSignUp = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: userId, password })
@@ -38,6 +39,7 @@ function Login() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Register failed')
       localStorage.setItem('token', data.token)
+      localStorage.setItem('userId', data.id)
       navigate('/dashboard')
     } catch (err) {
       alert(err.message || 'Register error')
