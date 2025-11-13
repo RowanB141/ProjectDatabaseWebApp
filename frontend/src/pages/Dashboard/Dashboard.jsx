@@ -27,14 +27,14 @@ function Dashboard() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-      fetch('http://localhost:5000/api/projects/', {
+      fetch('/api/projects/', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(async (r) => {
       if (!r.ok) throw new Error('Failed to load projects');
       return r.json();
     }).then(setProjects).catch(err => console.warn(err));
       // fetch hardware sets
-      fetch('http://localhost:5000/api/hardware/', {
+      fetch('/api/hardware/', {
       headers: { Authorization: `Bearer ${token}` }
     }).then(async (r) => {
       if (!r.ok) throw new Error('Failed to load hardware');
@@ -52,7 +52,7 @@ function Dashboard() {
     if (!token) { alert('Please login'); return; }
     try {
         console.log('updating hardware', { id, action, amount });
-      const res = await fetch(`http://localhost:5000/api/hardware/${id}`, {
+      const res = await fetch(`/api/hardware/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action, amount })
@@ -91,7 +91,7 @@ function Dashboard() {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, isMember: isJoining } : p));
     try {
       const endpoint = isJoining ? 'join' : 'leave';
-      const res = await fetch(`http://localhost:5000/api/projects/${projectId}/${endpoint}`, {
+      const res = await fetch(`/api/projects/${projectId}/${endpoint}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -121,7 +121,7 @@ function Dashboard() {
 
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5000/api/projects/', {
+      const res = await fetch('/api/projects/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(projectData)
@@ -138,7 +138,7 @@ function Dashboard() {
   const handleDeleteProject = async (projectId) => {
   const token = localStorage.getItem('token');
   try {
-    const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+    const res = await fetch(`/api/projects/${projectId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });

@@ -71,3 +71,19 @@ def update_hardware(hid):
         "available": int(updated.get("available", 0)),
         "global_usage": updated.get("global_usage", {})
     }), 200
+
+@hardware_bp.route("/init", methods=["POST"])
+@jwt_required()
+def init_hardware():
+    hw_coll = mongo.db.hardware
+
+    # only insert if collection is empty
+    if hw_coll.count_documents({}) == 0:
+        hw_sets = [
+            {"name": "HWSet1", "capacity": 100, "available": 100},
+            {"name": "HWSet2", "capacity": 100, "available": 100}
+        ]
+        hw_coll.insert_many(hw_sets)
+        return jsonify({"message": "Hardware sets initialized."}), 201
+    else:
+        return jsonify({"message": "Hardware already exists."}), 200
