@@ -27,13 +27,11 @@ def create_app():
     app.register_blueprint(projects_bp, url_prefix="/api/projects")
     app.register_blueprint(hardware_bp, url_prefix="/api/hardware")
 
-    # Static routes
-    @app.route("/")
-    def index():
-        return send_from_directory(app.static_folder, "index.html")
-
-    @app.errorhandler(404)
-    def not_found(e):
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve(path):
+        if path and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
         return send_from_directory(app.static_folder, "index.html")
 
     return app
