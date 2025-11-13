@@ -40,7 +40,7 @@ function Dashboard() {
     const loadInitialData = async () => {
       // Fetch projects
       try {
-        const projectsResponse = await fetch('http://localhost:5000/api/projects/', {
+        const projectsResponse = await fetch('/api/projects/', {
           headers: { Authorization: `Bearer ${authToken}` }
         });
         if (!projectsResponse.ok) throw new Error('Failed to load projects');
@@ -52,7 +52,7 @@ function Dashboard() {
 
       // Fetch hardware sets
       try {
-        const hardwareResponse = await fetch('http://localhost:5000/api/hardware/', {
+        const hardwareResponse = await fetch('/api/hardware/', {
           headers: { Authorization: `Bearer ${authToken}` }
         });
         if (!hardwareResponse.ok) throw new Error('Failed to load hardware');
@@ -124,7 +124,7 @@ function Dashboard() {
 
     // Create the project
     try {
-      const response = await fetch('http://localhost:5000/api/projects/', {
+      const response = await fetch('/api/projects/', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 
@@ -223,7 +223,7 @@ function Dashboard() {
     try {
       const action = isJoining ? 'join' : 'leave';
       const response = await fetch(
-        `http://localhost:5000/api/projects/${projectId}/${action}`,
+        `/api/projects/${projectId}/${action}`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${authToken}` }
@@ -308,7 +308,7 @@ function Dashboard() {
     const authToken = localStorage.getItem('token');
 
     try {
-      const response = await fetch(`http://localhost:5000/api/hardware/${hardwareId}`, {
+      const response = await fetch(`/api/hardware/${hardwareId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -385,7 +385,7 @@ function Dashboard() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/projects/${targetProject.id}/join`, {
+      const response = await fetch(`/api/projects/${targetProject.id}/join`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${authToken}` }
       });
