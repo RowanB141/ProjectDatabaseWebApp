@@ -153,7 +153,7 @@ function Dashboard() {
 
   const reloadHardware = async () => {
     const authToken = localStorage.getItem('token');
-    const response = await fetch('http://localhost:5000/api/hardware/', {
+    const response = await fetch('/api/hardware/', {
       headers: { Authorization: `Bearer ${authToken}` }
     });
     
@@ -183,7 +183,7 @@ function Dashboard() {
     );
 
     try {
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      const response = await fetch(`/api/projects/${projectId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${authToken}` }
       });
@@ -447,7 +447,7 @@ function Dashboard() {
     try {
       // Update hardware on server
       const response = await fetch(
-        `http://localhost:5000/api/hardware/${targetHardware.id}`,
+        `/api/hardware/${targetHardware.id}`,
         {
           method: 'PUT',
           headers: {
