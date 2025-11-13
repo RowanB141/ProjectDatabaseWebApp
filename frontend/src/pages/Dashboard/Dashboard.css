@@ -79,24 +79,16 @@
   flex-wrap: wrap;
 }
 
-.hardware-card {
-  flex: 1;
-  min-width: 200px;
-  padding: 1.5rem;
-  background-color: rgb(var(--color-surface));
-  color: rgb(var(--color-on-surface));
+.projectid-search {
+  padding: 8px 10px;
   border: 1px solid rgba(var(--color-secondary), 0.15);
-  border-radius: 8px;
+  border-radius: 6px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
+  min-width: 240px;
 }
 
-.hardware-card h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
+.project-buttons {
+  display: flex;
+  gap: 8px;
 }
-
-.hardware-card p {
-  margin: 0.5rem 0;
-  color: rgba(var(--color-on-surface), 0.9);
-}
-
-

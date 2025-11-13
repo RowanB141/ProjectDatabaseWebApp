@@ -9,11 +9,26 @@
   border: 1px solid rgba(var(--color-secondary), 0.1);
 }
 
-.project-name {
-  font-weight: 500;
-  flex: 1;
+.project-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+.project-name {
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+.project-id-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(var(--color-secondary), 0.08);
+  color: rgba(var(--color-on-surface), 0.85);
+  border: 1px solid rgba(var(--color-secondary), 0.18);
+}
 .project-actions {
   display: flex;
   gap: 8px;

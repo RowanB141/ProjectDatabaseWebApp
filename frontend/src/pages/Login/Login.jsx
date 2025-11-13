@@ -22,6 +22,7 @@ function Login() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Login failed')
       localStorage.setItem('token', data.token)
+      localStorage.setItem('userId', data.id)
       navigate('/dashboard')
     } catch (err) {
       alert(err.message || 'Login error')
@@ -38,6 +39,7 @@ function Login() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Register failed')
       localStorage.setItem('token', data.token)
+      localStorage.setItem('userId', data.id)
       navigate('/dashboard')
     } catch (err) {
       alert(err.message || 'Register error')
