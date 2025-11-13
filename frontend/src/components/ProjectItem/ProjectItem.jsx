@@ -4,7 +4,12 @@ import './ProjectItem.css';
 function ProjectItem({ project, onJoinLeave, onDelete, onView }) {
   return (
     <div className="project-item">
-      <span className="project-name">{project.name}</span>
+      <div className="project-main">
+        <span className="project-name">{project.name}</span>
+        {project.projectId && (
+          <span className="project-id-badge">{project.projectId}</span>
+        )}
+      </div>
       <div className="project-actions">
         <Button variant="secondary" onClick={() => onView(project)}>View</Button>
         <Button onClick={() => onJoinLeave(project.id)}>

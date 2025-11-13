@@ -11,23 +11,24 @@ function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [hardwareSets, setHardwareSets] = useState([]);
-  // local demo hardware state used when backend returns no hardware
+
   const demoDefaults = [
     { id: 'demo-hw-1', name: 'Hardware Set 1', capacity: 100, available: 100 },
     { id: 'demo-hw-2', name: 'Hardware Set 2', capacity: 100, available: 100 }
   ];
   const [demoHardware, setDemoHardware] = useState(demoDefaults);
-  // map of hardware id -> { checkout: string, checkin: string } for quick inputs
+  
   const [hwAmounts, setHwAmounts] = useState({});
-  // map of hardware id -> { checkout: string|null, checkin: string|null } for validation messages
+  
   const [hwErrors, setHwErrors] = useState({});
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({ name: '', id: '', description: '' });
 
-  // NEW: view modal state (additive)
   const [selectedProject, setSelectedProject] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
+
+  const [availableFilter, setAvailableFilter] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -126,7 +127,7 @@ function Dashboard() {
     const res = await fetch('http://localhost:5000/api/hardware/', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) return; // keep it silent for class demo
+    if (!res.ok) return;
     const hw = await res.json();
     setHardwareSets(hw.map(h => ({
       id: h.id,
@@ -165,7 +166,6 @@ function Dashboard() {
     const project = projects.find(p => p.id === projectId);
 
     const isJoining = !project.isMember;
-    // Optimistic toggle
     setProjects(prev =>
       prev.map(p => p.id === projectId ? { ...p, isMember: isJoining } : p)
     );
@@ -234,7 +234,6 @@ function Dashboard() {
         throw new Error(data.message || 'Hardware update failed');
       }
 
-      // Update local hardware
       setHardwareSets(prev =>
         prev.map(h => h.id === data.id ? { ...h, available: data.available, capacity: data.capacity, name: data.name } : h)
       );
@@ -267,12 +266,11 @@ function Dashboard() {
       const updated = await res.json();
       if (!res.ok) throw new Error(updated.message || 'Update failed');
 
-      // update global availability
       setHardwareSets(prev => prev.map(h => h.id === updated.id
         ? { ...h, available: updated.available, capacity: updated.capacity, name: updated.name }
         : h
       ));
-      // update selected project’s counts
+      
       setProjects(prev => prev.map(p => p.projectId === projectHumanId
         ? {
             ...p,
@@ -331,21 +329,39 @@ function Dashboard() {
         <section className="projects-section">
           <div className="section-header">
             <h2>Available Projects</h2>
+            <input
+              type="text"
+              className="projectid-search"
+              placeholder="Search by Project ID…"
+              value={availableFilter}
+              onChange={(e) => setAvailableFilter(e.target.value)}
+            />
           </div>
-          <div className="projects-list">
-            {projects.filter(p => !p.isMember).length === 0 ? (
-              <div className="empty-state">No projects yet.</div>
-            ) : (
-              projects.filter(p => !p.isMember).map((project) => (
-                <ProjectItem
-                  key={project.id}
-                  project={project}
-                  onJoinLeave={handleToggleMembership}
-                  onView={handleViewProject}
-                />
-              ))
-            )}
-          </div>
+
+          {(() => {
+            const needle = availableFilter.trim().toLowerCase();
+            const list = projects.filter(p => !p.isMember);
+            const filtered = needle
+              ? list.filter(p => String(p.projectId || '').toLowerCase().includes(needle))
+              : list;
+
+            return (
+              <div className="projects-list">
+                {filtered.length === 0 ? (
+                  <div className="empty-state">No projects yet.</div>
+                ) : (
+                  filtered.map((project) => (
+                    <ProjectItem
+                      key={project.id}
+                      project={project}
+                      onJoinLeave={handleToggleMembership}
+                      onView={handleViewProject}
+                    />
+                  ))
+                )}
+              </div>
+            );
+          })()}
         </section>
       </div>
 
