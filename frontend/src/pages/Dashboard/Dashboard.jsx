@@ -30,133 +30,175 @@ function Dashboard() {
 
   const [availableFilter, setAvailableFilter] = useState('');
 
+  
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    const authToken = localStorage.getItem('token');
+    if (!authToken) return;
 
-    const loadData = async () => {
+    const loadInitialData = async () => {
+      // Fetch projects
       try {
-        const projRes = await fetch('http://localhost:5000/api/projects/', {
-          headers: { Authorization: `Bearer ${token}` }
+        const projectsResponse = await fetch('http://localhost:5000/api/projects/', {
+          headers: { Authorization: `Bearer ${authToken}` }
         });
-        if (!projRes.ok) throw new Error('Failed to load projects');
-        const projData = await projRes.json();
-        setProjects(projData);
-      } catch (e) {
-        console.warn(e);
+        if (!projectsResponse.ok) throw new Error('Failed to load projects');
+        const projectsList = await projectsResponse.json();
+        setProjects(projectsList);
+      } catch (error) {
+        console.warn(error);
       }
 
+      // Fetch hardware sets
       try {
-        const hwRes = await fetch('http://localhost:5000/api/hardware/', {
-          headers: { Authorization: `Bearer ${token}` }
+        const hardwareResponse = await fetch('http://localhost:5000/api/hardware/', {
+          headers: { Authorization: `Bearer ${authToken}` }
         });
-        if (!hwRes.ok) throw new Error('Failed to load hardware');
-        const hw = await hwRes.json();
-        setHardwareSets(hw.map(h => ({ id: h.id, name: h.name, capacity: h.capacity, available: h.available })));
-      } catch (e) {
-        console.warn(e);
+        if (!hardwareResponse.ok) throw new Error('Failed to load hardware');
+        const hardwareList = await hardwareResponse.json();
+        setHardwareSets(
+          hardwareList.map(hwSet => ({
+            id: hwSet.id,
+            name: hwSet.name,
+            capacity: hwSet.capacity,
+            available: hwSet.available
+          }))
+        );
+      } catch (error) {
+        console.warn(error);
       }
     };
 
-    loadData();
+    loadInitialData();
   }, []);
 
+  
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
+
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setNewProject({ name: '', id: '', description: '' });
   };
 
+
   const handleInputChange = (field, value) => {
     setNewProject(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCreateProject = async (projectData) => {
-    const token = localStorage.getItem('token');
 
-    const name = String(projectData?.name || '').trim();
-    const projId = String(projectData?.id || '').trim();
-    if (!name || !projId) {
+  const handleCreateProject = async (projectData) => {
+    const authToken = localStorage.getItem('token');
+
+    const projectName = String(projectData?.name || '').trim();
+    const projectId = String(projectData?.id || '').trim();
+    const projectDescription = String(projectData?.description || '');
+
+    if (!projectName || !projectId) {
       alert('Please fill in Project Name and Project ID.');
       return;
     }
 
-    const nameToCheck = name.toLowerCase();
-    const idToCheck = projId.toLowerCase();
-    const dupByName = projects.some(p => (p.name || '').toLowerCase().trim() === nameToCheck);
-    const dupById = projects.some(p => (p.id || '').toLowerCase().trim() === idToCheck);
-    if (dupById) {
+    // Check for duplicates (case-insensitive)
+    const normalizedName = projectName.toLowerCase();
+    const normalizedId = projectId.toLowerCase();
+    
+    const existingProjectWithSameName = projects.some(
+      project => (project.name || '').toLowerCase().trim() === normalizedName
+    );
+    const existingProjectWithSameId = projects.some(
+      project => (project.id || '').toLowerCase().trim() === normalizedId
+    );
+
+    if (existingProjectWithSameId) {
       alert('A project with this Project ID already exists. Please choose a unique ID.');
       return;
     }
-    if (dupByName) {
+    if (existingProjectWithSameName) {
       alert('A project with this name already exists. Please choose a different name.');
       return;
     }
 
+    // Create the project
     try {
-      const res = await fetch('http://localhost:5000/api/projects/', {
+      const response = await fetch('http://localhost:5000/api/projects/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${authToken}` 
+        },
         body: JSON.stringify({
-          name,
-          id: projId,
-          description: String(projectData?.description || '')
+          name: projectName,
+          id: projectId,
+          description: projectDescription
         })
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to create project');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to create project');
       }
 
-      const created = await res.json();
-      setProjects(prev => [...prev, created]);
+      const newProject = await response.json();
+      setProjects(previousProjects => [...previousProjects, newProject]);
       handleCloseModal();
-    } catch (err) {
-      alert(err.message || 'Error creating project');
+    } catch (error) {
+      alert(error.message || 'Error creating project');
     }
   };
 
 
   const reloadHardware = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/hardware/', {
-      headers: { Authorization: `Bearer ${token}` }
+    const authToken = localStorage.getItem('token');
+    const response = await fetch('http://localhost:5000/api/hardware/', {
+      headers: { Authorization: `Bearer ${authToken}` }
     });
-    if (!res.ok) return;
-    const hw = await res.json();
-    setHardwareSets(hw.map(h => ({
-      id: h.id,
-      name: h.name,
-      capacity: h.capacity,
-      available: h.available
-    })));
+    
+    if (!response.ok) return;
+    
+    const hardwareList = await response.json();
+    setHardwareSets(
+      hardwareList.map(hardwareSet => ({
+        id: hardwareSet.id,
+        name: hardwareSet.name,
+        capacity: hardwareSet.capacity,
+        available: hardwareSet.available
+      }))
+    );
   };
 
+
   const handleDeleteProject = async (projectId) => {
-    const token = localStorage.getItem('token');
-    const backup = projects;
-    setProjects(prev => prev.filter(p => p.id !== projectId));
+    const authToken = localStorage.getItem('token');
+    
+    // Save current state for rollback if deletion fails
+    const projectsBackup = projects;
+    
+    // Optimistically remove the project from UI
+    setProjects(previousProjects => 
+      previousProjects.filter(project => project.id !== projectId)
+    );
 
     try {
-      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${authToken}` }
       });
-      if (!res.ok) {
-        setProjects(backup);
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to delete project');
+      
+      if (!response.ok) {
+        // Restore projects list on failure
+        setProjects(projectsBackup);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete project');
       }
 
+      // Refresh hardware availability since deleted project returned its hardware
       await reloadHardware();
-    } catch (err) {
-      setProjects(backup);
-      alert(err.message);
+    } catch (error) {
+      // Restore projects list on error
+      setProjects(projectsBackup);
+      alert(error.message);
     }
   };
 
@@ -186,113 +228,226 @@ function Dashboard() {
     }
   };
 
+  
   const handleLogOut = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
 
-  const setHwAmount = (hid, field, value) => {
-    setHwAmounts(prev => ({ ...prev, [hid]: { ...(prev[hid] || {}), [field]: value } }));
+
+  const setHardwareAmount = (hardwareId, fieldName, value) => {
+    setHwAmounts(previousAmounts => ({
+      ...previousAmounts,
+      [hardwareId]: {
+        ...(previousAmounts[hardwareId] || {}),
+        [fieldName]: value
+      }
+    }));
   };
 
-  const setHwError = (hid, field, message) => {
-    setHwErrors(prev => ({ ...prev, [hid]: { ...(prev[hid] || {}), [field]: message } }));
+
+  const setHardwareError = (hardwareId, fieldName, errorMessage) => {
+    setHwErrors(previousErrors => ({
+      ...previousErrors,
+      [hardwareId]: {
+        ...(previousErrors[hardwareId] || {}),
+        [fieldName]: errorMessage
+      }
+    }));
   };
 
-  const clearHwError = (hid, field) => {
-    setHwErrors(prev => ({ ...prev, [hid]: { ...(prev[hid] || {}), [field]: null } }));
+
+  const clearHardwareError = (hardwareId, fieldName) => {
+    setHwErrors(previousErrors => ({
+      ...previousErrors,
+      [hardwareId]: {
+        ...(previousErrors[hardwareId] || {}),
+        [fieldName]: null
+      }
+    }));
   };
 
-  const performDemoUpdate = (hid, action, amount) => {
-    setDemoHardware(prev =>
-      prev.map(h => h.id === hid
-        ? {
-            ...h,
-            available:
-              action === 'checkout'
-                ? Math.max(0, h.available - amount)
-                : Math.min(h.capacity, h.available + amount)
-          }
-        : h
+
+  const performDemoUpdate = (hardwareId, action, amount) => {
+    setDemoHardware(previousHardware =>
+      previousHardware.map(hardwareSet =>
+        hardwareSet.id === hardwareId
+          ? {
+              ...hardwareSet,
+              available:
+                action === 'checkout'
+                  ? Math.max(0, hardwareSet.available - amount)
+                  : Math.min(hardwareSet.capacity, hardwareSet.available + amount)
+            }
+          : hardwareSet
       )
     );
   };
 
-  const updateHardware = async (hid, action, amount) => {
-    const token = localStorage.getItem('token');
+
+  const updateHardware = async (hardwareId, action, amount) => {
+    const authToken = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`http://localhost:5000/api/hardware/${hid}`, {
+      const response = await fetch(`http://localhost:5000/api/hardware/${hardwareId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
         body: JSON.stringify({ action, amount })
       });
 
-      const data = await res.json();
+      const responseData = await response.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Hardware update failed');
+      if (!response.ok) {
+        throw new Error(responseData.message || 'Hardware update failed');
       }
 
-      setHardwareSets(prev =>
-        prev.map(h => h.id === data.id ? { ...h, available: data.available, capacity: data.capacity, name: data.name } : h)
+      // Update the hardware set with new availability from server
+      setHardwareSets(previousSets =>
+        previousSets.map(hardwareSet =>
+          hardwareSet.id === responseData.id
+            ? {
+                ...hardwareSet,
+                available: responseData.available,
+                capacity: responseData.capacity,
+                name: responseData.name
+              }
+            : hardwareSet
+        )
       );
 
-      return { ok: true, data };
-    } catch (err) {
-      return { ok: false, message: err.message || 'Hardware update failed' };
+      return { ok: true, data: responseData };
+    } catch (error) {
+      return { ok: false, message: error.message || 'Hardware update failed' };
     }
   };
+
 
   const handleViewProject = (project) => {
     setSelectedProject(project);
     setIsViewOpen(true);
   };
 
-  const handleProjectHardware = async (hardwareName, action, amount, projectHumanId) => {
-    if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
-    const token = localStorage.getItem('token');
-    if (!token) { alert('Please login'); return; }
 
-    const hw = hardwareSets.find(h => h.name === hardwareName);
-    if (!hw) { alert('Hardware not found'); return; }
+  const handleProjectHardware = async (hardwareName, action, amount, projectId) => {
+    // Validate inputs
+    if (!amount || amount <= 0) {
+      alert('Enter a valid amount');
+      return;
+    }
+
+    const authToken = localStorage.getItem('token');
+    if (!authToken) {
+      alert('Please login');
+      return;
+    }
+
+    // Find the hardware set by name
+    const targetHardware = hardwareSets.find(
+      hardwareSet => hardwareSet.name === hardwareName
+    );
+    if (!targetHardware) {
+      alert('Hardware not found');
+      return;
+    }
+
+    // Calculate availability change
+    const availabilityDelta = action === 'checkout' ? -amount : amount;
+
+    // Optimistically update global hardware availability immediately
+    setHardwareSets(previousSets =>
+      previousSets.map(hardwareSet => {
+        if (hardwareSet.id !== targetHardware.id) return hardwareSet;
+        return {
+          ...hardwareSet,
+          available: hardwareSet.available + availabilityDelta
+        };
+      })
+    );
 
     try {
-      const res = await fetch(`http://localhost:5000/api/hardware/${hw.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action, amount, project_id: projectHumanId })
-      });
-      const updated = await res.json();
-      if (!res.ok) throw new Error(updated.message || 'Update failed');
-
-      setHardwareSets(prev => prev.map(h => h.id === updated.id
-        ? { ...h, available: updated.available, capacity: updated.capacity, name: updated.name }
-        : h
-      ));
-      
-      setProjects(prev => prev.map(p => p.projectId === projectHumanId
-        ? {
-            ...p,
-            hardware: {
-              ...p.hardware,
-              [hardwareName]: (p.hardware?.[hardwareName] || 0) + (action === 'checkout' ? amount : -amount)
-            }
-          }
-        : p
-      ));
-      setSelectedProject(prev => prev && {
-        ...prev,
-        hardware: {
-          ...prev.hardware,
-          [hardwareName]: (prev.hardware?.[hardwareName] || 0) + (action === 'checkout' ? amount : -amount)
+      // Update hardware on server
+      const response = await fetch(
+        `http://localhost:5000/api/hardware/${targetHardware.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ action, amount, project_id: projectId })
         }
-      });
-    } catch (err) {
-      alert(err.message || 'Error updating hardware');
+      );
+
+      const updatedHardware = await response.json();
+      if (!response.ok) {
+        throw new Error(updatedHardware.message || 'Update failed');
+      }
+
+      // Reconcile global hardware with server response
+      setHardwareSets(previousSets =>
+        previousSets.map(hardwareSet =>
+          hardwareSet.id === updatedHardware.id
+            ? {
+                ...hardwareSet,
+                available: updatedHardware.available,
+                capacity: updatedHardware.capacity,
+                name: updatedHardware.name
+              }
+            : hardwareSet
+        )
+      );
+
+      // Update project's hardware usage
+      const projectHardwareChange = action === 'checkout' ? amount : -amount;
+      
+      setProjects(previousProjects =>
+        previousProjects.map(project =>
+          project.projectId === projectId
+            ? {
+                ...project,
+                hardware: {
+                  ...project.hardware,
+                  [hardwareName]:
+                    (project.hardware?.[hardwareName] || 0) + projectHardwareChange
+                }
+              }
+            : project
+        )
+      );
+
+      // Update the currently selected project in the modal
+      setSelectedProject(previousProject =>
+        previousProject && {
+          ...previousProject,
+          hardware: {
+            ...previousProject.hardware,
+            [hardwareName]:
+              (previousProject.hardware?.[hardwareName] || 0) + projectHardwareChange
+          }
+        }
+      );
+    } catch (error) {
+      // Roll back optimistic update on error
+      const rollbackDelta = action === 'checkout' ? amount : -amount;
+      
+      setHardwareSets(previousSets =>
+        previousSets.map(hardwareSet => {
+          if (hardwareSet.id !== targetHardware.id) return hardwareSet;
+          return {
+            ...hardwareSet,
+            available: hardwareSet.available + rollbackDelta
+          };
+        })
+      );
+      
+      alert(error.message || 'Error updating hardware');
     }
   };
 
+  
   return (
     <div>
       <section className="banner-section">
@@ -310,10 +465,10 @@ function Dashboard() {
           </div>
 
           <div className="projects-list">
-            {projects.filter(p => p.isMember).length === 0 ? (
+            {projects.filter(project => project.isMember).length === 0 ? (
               <div className="empty-state">No projects yet.</div>
             ) : (
-              projects.filter(p => p.isMember).map((project) => (
+              projects.filter(project => project.isMember).map((project) => (
                 <ProjectItem
                   key={project.id}
                   project={project}
@@ -339,18 +494,20 @@ function Dashboard() {
           </div>
 
           {(() => {
-            const needle = availableFilter.trim().toLowerCase();
-            const list = projects.filter(p => !p.isMember);
-            const filtered = needle
-              ? list.filter(p => String(p.projectId || '').toLowerCase().includes(needle))
-              : list;
+            const searchTerm = availableFilter.trim().toLowerCase();
+            const availableProjects = projects.filter(project => !project.isMember);
+            const filteredProjects = searchTerm
+              ? availableProjects.filter(project =>
+                  String(project.projectId || '').toLowerCase().includes(searchTerm)
+                )
+              : availableProjects;
 
             return (
               <div className="projects-list">
-                {filtered.length === 0 ? (
+                {filteredProjects.length === 0 ? (
                   <div className="empty-state">No projects yet.</div>
                 ) : (
-                  filtered.map((project) => (
+                  filteredProjects.map((project) => (
                     <ProjectItem
                       key={project.id}
                       project={project}
@@ -363,6 +520,28 @@ function Dashboard() {
             );
           })()}
         </section>
+
+        <section className="resources-section">
+          <h2>Hardware Sets</h2>
+          <div className="hardware-sets">
+            {(() => {
+              const usingDemoData = hardwareSets.length === 0;
+              const hardwareToDisplay = usingDemoData ? demoHardware : hardwareSets;
+
+              return (
+                <>
+                  {hardwareToDisplay.slice(0, 2).map(hardwareSet => (
+                    <div key={hardwareSet.id} className="hardware-card" style={{ minWidth: '260px' }}>
+                      <h3>{hardwareSet.name}</h3>
+                      <p>Capacity: {hardwareSet.capacity}</p>
+                      <p>Available: {hardwareSet.available}</p>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
+          </div>
+        </section>
       </div>
 
       <ProjectModal
@@ -371,14 +550,17 @@ function Dashboard() {
         onSubmit={handleCreateProject}
       />
 
-
       <ProjectViewModal
         isOpen={isViewOpen}
         onClose={() => setIsViewOpen(false)}
         project={selectedProject}
         hardwareSets={hardwareSets}
-        onCheckout={(name, amt) => selectedProject && handleProjectHardware(name, 'checkout', amt, selectedProject.projectId)}
-        onCheckin={(name, amt) => selectedProject && handleProjectHardware(name, 'checkin', amt, selectedProject.projectId)}
+        onCheckout={(hardwareName, amount) =>
+          selectedProject && handleProjectHardware(hardwareName, 'checkout', amount, selectedProject.projectId)
+        }
+        onCheckin={(hardwareName, amount) =>
+          selectedProject && handleProjectHardware(hardwareName, 'checkin', amount, selectedProject.projectId)
+        }
       />
     </div>
   );
