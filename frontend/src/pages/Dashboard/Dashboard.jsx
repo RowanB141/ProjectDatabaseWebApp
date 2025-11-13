@@ -33,43 +33,43 @@ function Dashboard() {
   const [availableFilter, setAvailableFilter] = useState('');
 
   
+  const loadInitialData = async () => {
+    // Fetch projects
+    try {
+      const projectsResponse = await fetch('/api/projects/', {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (!projectsResponse.ok) throw new Error('Failed to load projects');
+      const projectsList = await projectsResponse.json();
+      setProjects(projectsList);
+    } catch (error) {
+      console.warn(error);
+    }
+
+    // Fetch hardware sets
+    try {
+      const hardwareResponse = await fetch('/api/hardware/', {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (!hardwareResponse.ok) throw new Error('Failed to load hardware');
+      const hardwareList = await hardwareResponse.json();
+      setHardwareSets(
+        hardwareList.map(hwSet => ({
+          id: hwSet.id,
+          name: hwSet.name,
+          capacity: hwSet.capacity,
+          available: hwSet.available
+        }))
+      );
+    } catch (error) {
+      console.warn(error);
+    }
+  };
+
+
   useEffect(() => {
     const authToken = localStorage.getItem('token');
     if (!authToken) return;
-
-    const loadInitialData = async () => {
-      // Fetch projects
-      try {
-        const projectsResponse = await fetch('/api/projects/', {
-          headers: { Authorization: `Bearer ${authToken}` }
-        });
-        if (!projectsResponse.ok) throw new Error('Failed to load projects');
-        const projectsList = await projectsResponse.json();
-        setProjects(projectsList);
-      } catch (error) {
-        console.warn(error);
-      }
-
-      // Fetch hardware sets
-      try {
-        const hardwareResponse = await fetch('/api/hardware/', {
-          headers: { Authorization: `Bearer ${authToken}` }
-        });
-        if (!hardwareResponse.ok) throw new Error('Failed to load hardware');
-        const hardwareList = await hardwareResponse.json();
-        setHardwareSets(
-          hardwareList.map(hwSet => ({
-            id: hwSet.id,
-            name: hwSet.name,
-            capacity: hwSet.capacity,
-            available: hwSet.available
-          }))
-        );
-      } catch (error) {
-        console.warn(error);
-      }
-    };
-
     loadInitialData();
   }, []);
 
@@ -361,45 +361,26 @@ function Dashboard() {
 
   
   const handleJoinProjectById = async (projectId) => {
-    if (!projectId.trim()) {
+    const trimmedId = projectId.trim();
+    if (!trimmedId) {
       alert('Please enter a project ID');
       return;
     }
 
     const authToken = localStorage.getItem('token');
-    
-    // Find the project with this projectId
-    const targetProject = projects.find(
-      project => project.projectId?.toLowerCase() === projectId.trim().toLowerCase()
-    );
-
-    if (!targetProject) {
-      alert('Project not found');
-      return;
-    }
-
-    if (targetProject.isMember) {
-      alert('You are already a member of this project');
-      handleCloseJoinModal();
-      return;
-    }
 
     try {
-      const response = await fetch(`/api/projects/${targetProject.id}/join`, {
+      const response = await fetch(`/api/projects/${trimmedId}/join`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${authToken}` }
       });
 
-      if (!response.ok) throw new Error('Failed to join project');
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.message || 'Project not found or join failed');
+      }
 
-      // Update the project in state
-      setProjects(previousProjects =>
-        previousProjects.map(project =>
-          project.id === targetProject.id
-            ? { ...project, isMember: true }
-            : project
-        )
-      );
+      await loadInitialData();
 
       handleCloseJoinModal();
     } catch (error) {
