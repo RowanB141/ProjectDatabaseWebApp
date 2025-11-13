@@ -1,6 +1,7 @@
 import Button from '../../components/Button/Button';
 import ProjectItem from '../../components/ProjectItem/ProjectItem';
 import ProjectModal from '../../components/ProjectModal/ProjectModal';
+import ProjectViewModal from '../../components/ProjectViewModal/ProjectViewModal';
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
@@ -18,78 +19,157 @@ function Dashboard() {
   const [demoHardware, setDemoHardware] = useState(demoDefaults);
   // map of hardware id -> { checkout: string, checkin: string } for quick inputs
   const [hwAmounts, setHwAmounts] = useState({});
-  // map of hardware id -> { checkout: string|null, checkin: string|null } for validation errors
+  // map of hardware id -> { checkout: string|null, checkin: string|null } for validation messages
   const [hwErrors, setHwErrors] = useState({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newProject, setNewProject] = useState({ name: '', id: '', description: '' });
+
+  // NEW: view modal state (additive)
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-      fetch('http://localhost:5000/api/projects/', {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(async (r) => {
-      if (!r.ok) throw new Error('Failed to load projects');
-      return r.json();
-    }).then(setProjects).catch(err => console.warn(err));
-      // fetch hardware sets
-      fetch('http://localhost:5000/api/hardware/', {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(async (r) => {
-      if (!r.ok) throw new Error('Failed to load hardware');
-      return r.json();
-    }).then((hw) => {
-        console.log('fetched hardware', hw);
-      // normalize id field to id (string)
-      setHardwareSets(hw.map(h => ({ id: h.id, name: h.name, capacity: h.capacity, available: h.available })));
-    }).catch(err => console.warn(err));
+    const loadData = async () => {
+      try {
+        const projRes = await fetch('http://localhost:5000/api/projects/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!projRes.ok) throw new Error('Failed to load projects');
+        const projData = await projRes.json();
+        setProjects(projData);
+      } catch (e) {
+        console.warn(e);
+      }
+
+      try {
+        const hwRes = await fetch('http://localhost:5000/api/hardware/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!hwRes.ok) throw new Error('Failed to load hardware');
+        const hw = await hwRes.json();
+        setHardwareSets(hw.map(h => ({ id: h.id, name: h.name, capacity: h.capacity, available: h.available })));
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+
+    loadData();
   }, []);
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
 
-  const updateHardware = async (id, action, amount = 1) => {
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setNewProject({ name: '', id: '', description: '' });
+  };
+
+  const handleInputChange = (field, value) => {
+    setNewProject(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreateProject = async (projectData) => {
     const token = localStorage.getItem('token');
-    if (!token) { alert('Please login'); return; }
+
+    const name = String(projectData?.name || '').trim();
+    const projId = String(projectData?.id || '').trim();
+    if (!name || !projId) {
+      alert('Please fill in Project Name and Project ID.');
+      return;
+    }
+
+    const nameToCheck = name.toLowerCase();
+    const idToCheck = projId.toLowerCase();
+    const dupByName = projects.some(p => (p.name || '').toLowerCase().trim() === nameToCheck);
+    const dupById = projects.some(p => (p.id || '').toLowerCase().trim() === idToCheck);
+    if (dupById) {
+      alert('A project with this Project ID already exists. Please choose a unique ID.');
+      return;
+    }
+    if (dupByName) {
+      alert('A project with this name already exists. Please choose a different name.');
+      return;
+    }
+
     try {
-        console.log('updating hardware', { id, action, amount });
-      const res = await fetch(`http://localhost:5000/api/hardware/${id}`, {
-        method: 'PUT',
+      const res = await fetch('http://localhost:5000/api/projects/', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action, amount }) // TODO: Pass project id as well, so that the backend can update global_usage
-        // TODO: Either (or maybe both?) get hardware or get projects needs to return the hardware it has checked-out from global_usage
+        body: JSON.stringify({
+          name,
+          id: projId,
+          description: String(projectData?.description || '')
+        })
       });
-      const updated = await res.json();
-        console.log('update response', updated, res.status);
-      if (!res.ok) throw new Error(updated.message || 'Update failed');
-      setHardwareSets(prev => prev.map(h => (h.id === updated.id ? updated : h)));
-  // clear the amounts for that id after successful update
-  setHwAmounts(prev => ({ ...prev, [id]: { checkout: '', checkin: '' } }));
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to create project');
+      }
+
+      const created = await res.json();
+      setProjects(prev => [...prev, created]);
+      handleCloseModal();
     } catch (err) {
-      alert(err.message || 'Error updating hardware');
+      alert(err.message || 'Error creating project');
     }
   };
 
-  // Local demo-mode updater: mutates `demoHardware` to simulate availability changes
-  const performDemoUpdate = (id, action, amount = 1) => {
-    setDemoHardware(prev => prev.map(h => {
-      if (h.id !== id) return h;
-      let available = h.available;
-      if (action === 'checkout') {
-        available = Math.max(0, available - amount);
-      } else if (action === 'checkin') {
-        available = Math.min(h.capacity, available + amount);
-      }
-      return { ...h, available };
-    }));
-    // clear the amounts for that id after simulated update
-    setHwAmounts(prev => ({ ...prev, [id]: { checkout: '', checkin: '' } }));
+
+  const reloadHardware = async () => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:5000/api/hardware/', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) return; // keep it silent for class demo
+    const hw = await res.json();
+    setHardwareSets(hw.map(h => ({
+      id: h.id,
+      name: h.name,
+      capacity: h.capacity,
+      available: h.available
+    })));
   };
+
+  const handleDeleteProject = async (projectId) => {
+    const token = localStorage.getItem('token');
+    const backup = projects;
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        setProjects(backup);
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Failed to delete project');
+      }
+
+      await reloadHardware();
+    } catch (err) {
+      setProjects(backup);
+      alert(err.message);
+    }
+  };
+
 
   const handleToggleMembership = async (projectId) => {
     const token = localStorage.getItem('token');
     const project = projects.find(p => p.id === projectId);
+
     const isJoining = !project.isMember;
-    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, isMember: isJoining } : p));
+    // Optimistic toggle
+    setProjects(prev =>
+      prev.map(p => p.id === projectId ? { ...p, isMember: isJoining } : p)
+    );
+
     try {
       const endpoint = isJoining ? 'join' : 'leave';
       const res = await fetch(`http://localhost:5000/api/projects/${projectId}/${endpoint}`, {
@@ -98,69 +178,122 @@ function Dashboard() {
       });
       if (!res.ok) throw new Error(`Failed to ${endpoint}`);
     } catch (err) {
-      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, isMember: !isJoining } : p));
-      alert(err.message);
+      // revert on error
+      setProjects(prev =>
+        prev.map(p => p.id === projectId ? { ...p, isMember: !isJoining } : p)
+      );
+      alert(err.message || 'Failed to update membership');
     }
   };
-
-  const handleCreateProject = async (projectData) => {
-    // quick client-side duplicate check before sending to server
-  const nameToCheck = String(projectData.name || '').toLowerCase().trim();
-  const idToCheck = String(projectData.id || '').toLowerCase().trim();
-    const dupByName = projects.some(p => String(p.name || '').toLowerCase().trim() === nameToCheck);
-    const dupById = projects.some(p => String(p.id || '').toLowerCase().trim() === idToCheck);
-    // Enforce unique Project ID first
-    if (dupById) {
-      alert('A project with this Project ID already exists. Please choose a different Project ID.');
-      return;
-    }
-    // Optionally warn about duplicate names
-    if (dupByName) {
-      alert('A project with this name already exists. Consider using a different name.');
-      return;
-    }
-
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch('http://localhost:5000/api/projects/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(projectData)
-      });
-      if (!res.ok) throw new Error('Failed to create project');
-      const newProject = await res.json();
-      setProjects(prev => [...prev, newProject]);
-      setIsModalOpen(false);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleDeleteProject = async (projectId) => {
-  const token = localStorage.getItem('token');
-  try {
-    const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error('Failed to delete project');
-    setProjects(prev => prev.filter(p => p.id !== projectId));
-  } catch (err) {
-    alert(err.message);
-  }
-  };
-
 
   const handleLogOut = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
 
-
-  const createNewProject = () => {
-    setIsModalOpen(true);
+  const setHwAmount = (hid, field, value) => {
+    setHwAmounts(prev => ({ ...prev, [hid]: { ...(prev[hid] || {}), [field]: value } }));
   };
 
+  const setHwError = (hid, field, message) => {
+    setHwErrors(prev => ({ ...prev, [hid]: { ...(prev[hid] || {}), [field]: message } }));
+  };
+
+  const clearHwError = (hid, field) => {
+    setHwErrors(prev => ({ ...prev, [hid]: { ...(prev[hid] || {}), [field]: null } }));
+  };
+
+  const performDemoUpdate = (hid, action, amount) => {
+    setDemoHardware(prev =>
+      prev.map(h => h.id === hid
+        ? {
+            ...h,
+            available:
+              action === 'checkout'
+                ? Math.max(0, h.available - amount)
+                : Math.min(h.capacity, h.available + amount)
+          }
+        : h
+      )
+    );
+  };
+
+  const updateHardware = async (hid, action, amount) => {
+    const token = localStorage.getItem('token');
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/hardware/${hid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action, amount })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Hardware update failed');
+      }
+
+      // Update local hardware
+      setHardwareSets(prev =>
+        prev.map(h => h.id === data.id ? { ...h, available: data.available, capacity: data.capacity, name: data.name } : h)
+      );
+
+      return { ok: true, data };
+    } catch (err) {
+      return { ok: false, message: err.message || 'Hardware update failed' };
+    }
+  };
+
+  const handleViewProject = (project) => {
+    setSelectedProject(project);
+    setIsViewOpen(true);
+  };
+
+  const handleProjectHardware = async (hardwareName, action, amount, projectHumanId) => {
+    if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+    const token = localStorage.getItem('token');
+    if (!token) { alert('Please login'); return; }
+
+    const hw = hardwareSets.find(h => h.name === hardwareName);
+    if (!hw) { alert('Hardware not found'); return; }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/hardware/${hw.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action, amount, project_id: projectHumanId })
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.message || 'Update failed');
+
+      // update global availability
+      setHardwareSets(prev => prev.map(h => h.id === updated.id
+        ? { ...h, available: updated.available, capacity: updated.capacity, name: updated.name }
+        : h
+      ));
+      // update selected project’s counts
+      setProjects(prev => prev.map(p => p.projectId === projectHumanId
+        ? {
+            ...p,
+            hardware: {
+              ...p.hardware,
+              [hardwareName]: (p.hardware?.[hardwareName] || 0) + (action === 'checkout' ? amount : -amount)
+            }
+          }
+        : p
+      ));
+      setSelectedProject(prev => prev && {
+        ...prev,
+        hardware: {
+          ...prev.hardware,
+          [hardwareName]: (prev.hardware?.[hardwareName] || 0) + (action === 'checkout' ? amount : -amount)
+        }
+      });
+    } catch (err) {
+      alert(err.message || 'Error updating hardware');
+    }
+  };
 
   return (
     <div>
@@ -171,12 +304,11 @@ function Dashboard() {
         </div>
       </section>
 
-
       <div className="dashboard">
         <section className="projects-section">
           <div className="section-header">
             <h2>Your Projects</h2>
-            <Button variant="primary" onClick={createNewProject}>Create New Project</Button>
+            <Button variant="primary" onClick={handleOpenModal}>Create New Project</Button>
           </div>
 
           <div className="projects-list">
@@ -184,215 +316,56 @@ function Dashboard() {
               <div className="empty-state">No projects yet.</div>
             ) : (
               projects.filter(p => p.isMember).map((project) => (
-                <ProjectItem 
-                  key={project.id} 
+                <ProjectItem
+                  key={project.id}
                   project={project}
                   onJoinLeave={handleToggleMembership}
                   onDelete={handleDeleteProject}
+                  onView={handleViewProject}
                 />
               ))
             )}
           </div>
         </section>
-
 
         <section className="projects-section">
           <div className="section-header">
             <h2>Available Projects</h2>
           </div>
-
           <div className="projects-list">
             {projects.filter(p => !p.isMember).length === 0 ? (
               <div className="empty-state">No projects yet.</div>
             ) : (
               projects.filter(p => !p.isMember).map((project) => (
-                <ProjectItem 
-                  key={project.id} 
+                <ProjectItem
+                  key={project.id}
                   project={project}
                   onJoinLeave={handleToggleMembership}
+                  onView={handleViewProject}
                 />
               ))
             )}
           </div>
         </section>
-
-
-        <section className="resources-section">
-          <h2>Resources & Hardware Sets</h2>
-          {/* Quick controls for first two hardware sets (if present) */}
-          <div className="hardware-quick-row" style={{ display: 'flex', gap: '20px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            {(() => {
-              const isDemo = hardwareSets.length === 0;
-              const displayedHardware = isDemo ? demoHardware : hardwareSets;
-
-              return (
-                <>
-                  {displayedHardware.slice(0,2).map(h => (
-                    <div key={h.id} className="hardware-card" style={{ minWidth: '260px' }}>
-                      <h3>{h.name}</h3>
-                      <p>Capacity: {h.capacity}</p>
-                      <p>Available: {h.available}</p>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
-                        {/* checkout input */}
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="checkout"
-                            value={(hwAmounts[h.id] && hwAmounts[h.id].checkout) || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setHwAmounts(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: val } }));
-                              // validate: allow only digits
-                              if (val === '' || /^\d+$/.test(val)) {
-                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: '' } }));
-                              } else {
-                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Invalid input' } }));
-                              }
-                            }}
-                              style={{ width: '100px', padding: '6px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.12)' }}
-                          />
-                          {hwErrors[h.id] && hwErrors[h.id].checkout ? (
-                            <div style={{ color: '#d9534f', fontSize: '12px', marginTop: '4px' }}>{hwErrors[h.id].checkout}</div>
-                          ) : null}
-                        </div>
-                        <Button onClick={() => {
-                          const val = (hwAmounts[h.id] && hwAmounts[h.id].checkout) || '';
-                          if (!/^\d+$/.test(val)) {
-                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Invalid input' } }));
-                            return;
-                          }
-                          const num = Number(val);
-                          if (num <= 0) {
-                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Must be greater than 0' } }));
-                            return;
-                          }
-                          // Prevent checking out more than available
-                          if (num > h.available) {
-                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkout: 'Cannot checkout more than available' } }));
-                            return;
-                          }
-                          if (isDemo) {
-                            performDemoUpdate(h.id, 'checkout', num);
-                            return;
-                          }
-                          updateHardware(h.id, 'checkout', num);
-                        }}>
-                          Checkout
-                        </Button>
-
-                        {/* checkin input */}
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="checkin"
-                            value={(hwAmounts[h.id] && hwAmounts[h.id].checkin) || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setHwAmounts(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: val } }));
-                              if (val === '' || /^\d+$/.test(val)) {
-                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: '' } }));
-                              } else {
-                                setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Invalid input' } }));
-                              }
-                            }}
-                            style={{ width: '100px', padding: '6px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.12)' }}
-                          />
-                          {hwErrors[h.id] && hwErrors[h.id].checkin ? (
-                            <div style={{ color: '#d9534f', fontSize: '12px', marginTop: '4px' }}>{hwErrors[h.id].checkin}</div>
-                          ) : null}
-                        </div>
-                        <Button onClick={() => {
-                          const val = (hwAmounts[h.id] && hwAmounts[h.id].checkin) || '';
-                          if (!/^\d+$/.test(val)) {
-                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Invalid input' } }));
-                            return;
-                          }
-                          const num = Number(val);
-                          if (num <= 0) {
-                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Must be greater than 0' } }));
-                            return;
-                          }
-                          // Prevent checkin that would exceed capacity (optional guard)
-                          if (h.available + num > h.capacity) {
-                            setHwErrors(prev => ({ ...prev, [h.id]: { ...(prev[h.id] || {}), checkin: 'Cannot checkin more than capacity' } }));
-                            return;
-                          }
-                          if (isDemo) {
-                            performDemoUpdate(h.id, 'checkin', num);
-                            return;
-                          }
-                          updateHardware(h.id, 'checkin', num);
-                        }}>
-                          Checkin
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              );
-            })()}
-          </div>
-
-          <div className="hardware-sets">
-            {(() => {
-              const isDemo = hardwareSets.length === 0;
-              const displayedHardware = isDemo ? demoHardware : hardwareSets;
-
-              return (
-                <>
-                  {displayedHardware.slice(2).map(h => (
-                    <div key={h.id} className="hardware-card">
-                      <h3>{h.name}</h3>
-                      <p>Capacity: {h.capacity}</p>
-                      <p>Available: {h.available}</p>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button onClick={() => {
-                          // prevent checkout when nothing available
-                          if (h.available < 1) {
-                            alert('Not enough available to checkout');
-                            return;
-                          }
-                          if (isDemo) {
-                            performDemoUpdate(h.id, 'checkout', 1);
-                          } else {
-                            updateHardware(h.id, 'checkout', 1);
-                          }
-                        }}>Checkout 1</Button>
-                        <Button onClick={() => {
-                          // prevent checkin that would exceed capacity
-                          if (h.available >= h.capacity) {
-                            alert('Already at full capacity');
-                            return;
-                          }
-                          if (isDemo) {
-                            performDemoUpdate(h.id, 'checkin', 1);
-                          } else {
-                            updateHardware(h.id, 'checkin', 1);
-                          }
-                        }}>Checkin 1</Button>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              );
-            })()}
-          </div>
-        </section>
       </div>
 
-
-      <ProjectModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+      <ProjectModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
         onSubmit={handleCreateProject}
+      />
+
+
+      <ProjectViewModal
+        isOpen={isViewOpen}
+        onClose={() => setIsViewOpen(false)}
+        project={selectedProject}
+        hardwareSets={hardwareSets}
+        onCheckout={(name, amt) => selectedProject && handleProjectHardware(name, 'checkout', amt, selectedProject.projectId)}
+        onCheckin={(name, amt) => selectedProject && handleProjectHardware(name, 'checkin', amt, selectedProject.projectId)}
       />
     </div>
   );
 }
-
 
 export default Dashboard;

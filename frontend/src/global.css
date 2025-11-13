@@ -6,16 +6,15 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Color palette uses comma-separated RGB values so we can reuse with rgb() */
   --color-primary: 191, 87, 0;
   --color-secondary: 51, 63, 72;
   --color-background: 240, 240, 240;
-  --color-on-background: 20, 20, 20; /* text color on background */
-  --color-surface: 255, 255, 255; /* cards, panels */
+  --color-on-background: 20, 20, 20;
+  --color-surface: 255, 255, 255;
   --color-on-surface: 20, 20, 20;
 }
 
-/* Tailwind directives (placed at top so base/components/utilities are available) */
+/* Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,7 +36,6 @@ body {
   --color-secondary: 200, 200, 200;
 }
 
-/* Utility classes that use variables */
 .card {
   background-color: rgb(var(--color-surface));
   color: rgb(var(--color-on-surface));
@@ -45,7 +43,6 @@ body {
   padding: 12px;
 }
 
-/* Theme toggle position */
 .theme-toggle {
   position: fixed;
   top: 12px;

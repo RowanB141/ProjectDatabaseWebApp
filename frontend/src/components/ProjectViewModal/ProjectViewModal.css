@@ -1,0 +1,53 @@
+.hardware-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hardware-card {
+  flex: 1 1 260px;
+  min-width: 240px;
+  padding: 1.5rem;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-on-surface));
+  border: 1px solid rgba(var(--color-secondary), 0.15);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.hardware-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+}
+
+.hardware-card p {
+  margin: 0.5rem 0;
+  color: rgba(var(--color-on-surface), 0.9);
+}
+
+.hardware-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.qty-input {
+  width: 90px;
+  padding: 6px;
+  border: 1px solid rgba(var(--color-secondary), 0.12);
+  border-radius: 6px;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-on-surface));
+}
+
+.project-meta {
+  margin-bottom: 12px;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

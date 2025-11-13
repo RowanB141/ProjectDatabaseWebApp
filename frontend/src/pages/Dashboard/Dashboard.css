@@ -78,25 +78,3 @@
   gap: 2rem;
   flex-wrap: wrap;
 }
-
-.hardware-card {
-  flex: 1;
-  min-width: 200px;
-  padding: 1.5rem;
-  background-color: rgb(var(--color-surface));
-  color: rgb(var(--color-on-surface));
-  border: 1px solid rgba(var(--color-secondary), 0.15);
-  border-radius: 8px;
-}
-
-.hardware-card h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-}
-
-.hardware-card p {
-  margin: 0.5rem 0;
-  color: rgba(var(--color-on-surface), 0.9);
-}
-
-

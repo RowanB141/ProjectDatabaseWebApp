@@ -50,9 +50,14 @@ def create_project():
     
     # Create project in database
     proj_coll = mongo.db.projects
+
+    existing = proj_coll.find_one({"projectId": {"$regex": f"^{project_id}$", "$options": "i"}})
+    if existing:
+        return jsonify({"message": "Project ID already exists"}), 409
+
     new_project = {
         "name": name,
-        "projectId": project_id, # TODO: Figure out exactly what projectId is
+        "projectId": project_id,
         "description": description,
         "owner": user_id,
         "members": [user_id],
@@ -171,17 +176,47 @@ def leave_project(project_id):
     return jsonify({"message": "Left successfully"}), 200
 
 
-# Deletes the project with <project_id>
-# TODO: Check-in any hardware the project currently has checked-out
+# Deletes the project with <project_id> and returns all checked-out hardware first
 @projects_bp.route("/<project_id>", methods=["DELETE"])
 @jwt_required()
 def delete_project(project_id):
     user_id = get_jwt_identity()
     proj_coll = mongo.db.projects
-    
-    result = proj_coll.delete_one({"_id": ObjectId(project_id)})
-    
+    hw_coll = mongo.db.hardware
+
+    try:
+        obj_id = ObjectId(project_id)
+    except Exception:
+        return jsonify({"message": "Invalid project id"}), 400
+
+    project = proj_coll.find_one({"_id": obj_id})
+    if not project:
+        return jsonify({"message": "Project not found"}), 404
+
+    hw_usage = project.get("hardware", {}) or {}
+    hwset1_amt = int(hw_usage.get("HWSet1", 0) or 0)
+    hwset2_amt = int(hw_usage.get("HWSet2", 0) or 0)
+
+    returned = {"HWSet1": 0, "HWSet2": 0}
+
+    def return_to_set(set_name, amount):
+        if amount <= 0:
+            return 0
+        hw_doc = hw_coll.find_one({"name": set_name})
+        if not hw_doc:
+            return 0
+        new_available = int(hw_doc.get("available", 0) or 0) + amount
+        hw_coll.update_one({"_id": hw_doc["_id"]}, {"$set": {"available": new_available}})
+        return amount
+
+    returned["HWSet1"] = return_to_set("HWSet1", hwset1_amt)
+    returned["HWSet2"] = return_to_set("HWSet2", hwset2_amt)
+
+    result = proj_coll.delete_one({"_id": obj_id})
     if result.deleted_count == 0:
         return jsonify({"message": "Project not found"}), 404
-    
-    return jsonify({"message": "Deleted successfully"}), 200
+
+    return jsonify({
+        "message": "Deleted successfully; hardware returned",
+        "returned": returned
+    }), 200
