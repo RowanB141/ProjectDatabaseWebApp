@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from bson.objectid import ObjectId
+from bson.objectid import ObjectId, InvalidId
 from ..extensions import mongo
 
 projects_bp = Blueprint("projects", __name__)
@@ -148,16 +148,25 @@ def get_project_hardware(project_id):
 def join_project(project_id):
     user_id = get_jwt_identity()
     proj_coll = mongo.db.projects
-    
+
+    project = None
+    # Try MongoDB ObjectId first
+    try:
+        oid = ObjectId(project_id)
+        project = proj_coll.find_one({"_id": oid})
+    except (InvalidId, TypeError):
+        # Not a valid ObjectId, treat as projectId (your custom field)
+        project = proj_coll.find_one({"projectId": project_id})
+
+    if not project:
+        return jsonify({"message": "Project not found"}), 404
+
     # Add user to members array if not already there
-    result = proj_coll.update_one(
-        {"_id": ObjectId(project_id)},
+    proj_coll.update_one(
+        {"_id": project["_id"]},
         {"$addToSet": {"members": user_id}}
     )
-    
-    if result.matched_count == 0:
-        return jsonify({"message": "Project not found"}), 404
-    
+
     return jsonify({"message": "Joined successfully"}), 200
 
 
