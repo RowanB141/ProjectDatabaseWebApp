@@ -34,6 +34,9 @@ function Dashboard() {
 
   
   const loadInitialData = async () => {
+    const authToken = localStorage.getItem('token');
+    if (!authToken) return;
+
     // Fetch projects
     try {
       const projectsResponse = await fetch('/api/projects/', {
@@ -68,8 +71,6 @@ function Dashboard() {
 
 
   useEffect(() => {
-    const authToken = localStorage.getItem('token');
-    if (!authToken) return;
     loadInitialData();
   }, []);
 

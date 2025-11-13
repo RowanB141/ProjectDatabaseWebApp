@@ -43,6 +43,7 @@ python run.py
 Testing & Utilities:
 - A simple smoke script is available at `backend/smoke_test.py` (requires `requests`).
 - A Postman collection is included at `postman_collection.json`.
+- To deploy, use git push heroku `git subtree split --prefix backend main`:main
 
 ## Quick test (copy/paste PowerShell)
 Open three terminals: one for the backend (activate Python venv), one for the frontend (npm), and one for testing.
