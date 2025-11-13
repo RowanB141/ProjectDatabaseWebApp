@@ -87,3 +87,8 @@
   color: rgb(var(--color-on-surface));
   min-width: 240px;
 }
+
+.project-buttons {
+  display: flex;
+  gap: 8px;
+}

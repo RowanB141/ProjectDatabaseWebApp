@@ -6,14 +6,20 @@ from ..extensions import mongo
 projects_bp = Blueprint("projects", __name__)
 
 
-# Returns all the current projects and their info
-# TODO: Check user, and only return projects they are approved to view.
+# Returns all the current projects that the user is approved to view
 @projects_bp.route("/", methods=["GET"])
 @jwt_required()
 def list_projects():
     user_id = get_jwt_identity()
     proj_coll = mongo.db.projects
-    cursor = proj_coll.find({})
+    
+    # Only fetch projects where user is owner OR in members array
+    cursor = proj_coll.find({
+        "$or": [
+            {"owner": user_id},
+            {"members": user_id}
+        ]
+    })
 
     out = []
     for p in cursor:
@@ -29,6 +35,7 @@ def list_projects():
         })
     
     return jsonify(out), 200
+
 
 
 # Create a new project, assign the current user as owner, and add it to the project database

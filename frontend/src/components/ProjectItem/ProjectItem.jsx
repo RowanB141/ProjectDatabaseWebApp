@@ -11,7 +11,11 @@ function ProjectItem({ project, onJoinLeave, onDelete, onView }) {
         )}
       </div>
       <div className="project-actions">
-        <Button variant="secondary" onClick={() => onView(project)}>View</Button>
+        {project.isMember && (
+          <Button variant="secondary" onClick={() => onView(project)}>
+            View
+          </Button>
+        )}
         <Button onClick={() => onJoinLeave(project.id)}>
           {project.isMember ? 'Leave' : 'Join'}
         </Button>

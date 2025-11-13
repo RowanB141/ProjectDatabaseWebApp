@@ -2,6 +2,7 @@ import Button from '../../components/Button/Button';
 import ProjectItem from '../../components/ProjectItem/ProjectItem';
 import ProjectModal from '../../components/ProjectModal/ProjectModal';
 import ProjectViewModal from '../../components/ProjectViewModal/ProjectViewModal';
+import JoinProjectModal from '../../components/JoinProjectModal/JoinProjectModal';
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
@@ -27,6 +28,7 @@ function Dashboard() {
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
   const [availableFilter, setAvailableFilter] = useState('');
 
@@ -204,27 +206,44 @@ function Dashboard() {
 
 
   const handleToggleMembership = async (projectId) => {
-    const token = localStorage.getItem('token');
-    const project = projects.find(p => p.id === projectId);
+    const authToken = localStorage.getItem('token');
+    const targetProject = projects.find(project => project.id === projectId);
 
-    const isJoining = !project.isMember;
-    setProjects(prev =>
-      prev.map(p => p.id === projectId ? { ...p, isMember: isJoining } : p)
+    const isJoining = !targetProject.isMember;
+    
+    // Optimistically update membership status
+    setProjects(previousProjects =>
+      previousProjects.map(project =>
+        project.id === projectId 
+          ? { ...project, isMember: isJoining } 
+          : project
+      )
     );
 
     try {
-      const endpoint = isJoining ? 'join' : 'leave';
-      const res = await fetch(`http://localhost:5000/api/projects/${projectId}/${endpoint}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error(`Failed to ${endpoint}`);
-    } catch (err) {
-      // revert on error
-      setProjects(prev =>
-        prev.map(p => p.id === projectId ? { ...p, isMember: !isJoining } : p)
+      const action = isJoining ? 'join' : 'leave';
+      const response = await fetch(
+        `http://localhost:5000/api/projects/${projectId}/${action}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${authToken}` }
+        }
       );
-      alert(err.message || 'Failed to update membership');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to ${action} project`);
+      }
+
+    } catch (error) {
+      // Revert membership status on error
+      setProjects(previousProjects =>
+        previousProjects.map(project =>
+          project.id === projectId 
+            ? { ...project, isMember: !isJoining } 
+            : project
+        )
+      );
+      alert(error.message || 'Failed to update membership');
     }
   };
 
@@ -328,6 +347,64 @@ function Dashboard() {
   const handleViewProject = (project) => {
     setSelectedProject(project);
     setIsViewOpen(true);
+  };
+
+
+  const handleOpenJoinModal = () => {
+    setIsJoinModalOpen(true);
+  };
+
+
+  const handleCloseJoinModal = () => {
+    setIsJoinModalOpen(false);
+  };
+
+  
+  const handleJoinProjectById = async (projectId) => {
+    if (!projectId.trim()) {
+      alert('Please enter a project ID');
+      return;
+    }
+
+    const authToken = localStorage.getItem('token');
+    
+    // Find the project with this projectId
+    const targetProject = projects.find(
+      project => project.projectId?.toLowerCase() === projectId.trim().toLowerCase()
+    );
+
+    if (!targetProject) {
+      alert('Project not found');
+      return;
+    }
+
+    if (targetProject.isMember) {
+      alert('You are already a member of this project');
+      handleCloseJoinModal();
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/projects/${targetProject.id}/join`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to join project');
+
+      // Update the project in state
+      setProjects(previousProjects =>
+        previousProjects.map(project =>
+          project.id === targetProject.id
+            ? { ...project, isMember: true }
+            : project
+        )
+      );
+
+      handleCloseJoinModal();
+    } catch (error) {
+      alert(error.message || 'Error joining project');
+    }
   };
 
 
@@ -461,7 +538,10 @@ function Dashboard() {
         <section className="projects-section">
           <div className="section-header">
             <h2>Your Projects</h2>
-            <Button variant="primary" onClick={handleOpenModal}>Create New Project</Button>
+            <div className="project-buttons">
+              <Button variant="primary" onClick={handleOpenModal}>Create New Project</Button>
+              <Button variant="secondary" onClick={handleOpenJoinModal}>Join via projectID</Button>
+            </div>
           </div>
 
           <div className="projects-list">
@@ -561,6 +641,12 @@ function Dashboard() {
         onCheckin={(hardwareName, amount) =>
           selectedProject && handleProjectHardware(hardwareName, 'checkin', amount, selectedProject.projectId)
         }
+      />
+
+      <JoinProjectModal
+        isOpen={isJoinModalOpen}
+        onClose={handleCloseJoinModal}
+        onSubmit={handleJoinProjectById}
       />
     </div>
   );
