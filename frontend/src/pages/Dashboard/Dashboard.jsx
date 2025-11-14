@@ -234,7 +234,8 @@ function Dashboard() {
       if (!response.ok) {
         throw new Error(`Failed to ${action} project`);
       }
-
+      
+      await loadInitialData();
     } catch (error) {
       // Revert membership status on error
       setProjects(previousProjects =>
@@ -545,7 +546,7 @@ function Dashboard() {
 
         <section className="projects-section">
           <div className="section-header">
-            <h2>Available Projects</h2>
+            <h2>Owned Projects</h2>
             <input
               type="text"
               className="projectid-search"
